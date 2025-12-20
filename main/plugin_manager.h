@@ -121,6 +121,14 @@ void plugin_api_clear_refresh_request(void);
 size_t plugin_manager_get_status_widgets(plugin_icontext_t* out, size_t max,
                                           int start_x, int start_y);
 
+// ============================================
+// LED Overlay Integration
+// ============================================
+
+// Apply plugin LED overlay to BSP LED buffer
+// Call this before bsp_led_send() to preserve plugin LED states
+void plugin_api_apply_led_overlay(void);
+
 #ifdef __cplusplus
 }
 #endif

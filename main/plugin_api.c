@@ -169,6 +169,148 @@ size_t plugin_api_get_status_widgets(plugin_icontext_t* out, size_t max, int sta
 }
 
 // ============================================
+// Input Hook API Implementation
+// ============================================
+
+// Track registered hooks per plugin for cleanup
+#define MAX_PLUGIN_INPUT_HOOKS 8
+
+typedef struct {
+    int bsp_hook_id;
+    plugin_input_hook_fn callback;
+    void* user_data;
+    bool in_use;
+} plugin_input_hook_entry_t;
+
+static plugin_input_hook_entry_t plugin_input_hooks[MAX_PLUGIN_INPUT_HOOKS] = {0};
+
+// Internal callback that wraps plugin hook to BSP hook
+static bool plugin_input_hook_wrapper(bsp_input_event_t* bsp_event, void* user_data) {
+    int hook_index = (int)(intptr_t)user_data;
+    if (hook_index < 0 || hook_index >= MAX_PLUGIN_INPUT_HOOKS) {
+        return false;
+    }
+
+    plugin_input_hook_entry_t* entry = &plugin_input_hooks[hook_index];
+    if (!entry->in_use || !entry->callback) {
+        return false;
+    }
+
+    // Convert BSP event to plugin event format
+    plugin_input_event_t plugin_event = {0};
+    plugin_event.type = bsp_event->type;
+
+    switch (bsp_event->type) {
+        case INPUT_EVENT_TYPE_NAVIGATION:
+            plugin_event.key = bsp_event->args_navigation.key;
+            plugin_event.state = bsp_event->args_navigation.state;
+            plugin_event.modifiers = bsp_event->args_navigation.modifiers;
+            break;
+        case INPUT_EVENT_TYPE_KEYBOARD:
+            plugin_event.key = (uint32_t)bsp_event->args_keyboard.ascii;
+            plugin_event.state = true;
+            plugin_event.modifiers = bsp_event->args_keyboard.modifiers;
+            break;
+        case INPUT_EVENT_TYPE_SCANCODE:
+            plugin_event.key = bsp_event->args_scancode.scancode;
+            plugin_event.state = !(bsp_event->args_scancode.scancode & BSP_INPUT_SCANCODE_RELEASE_MODIFIER);
+            plugin_event.modifiers = 0;
+            break;
+        default:
+            break;
+    }
+
+    return entry->callback(&plugin_event, entry->user_data);
+}
+
+int plugin_input_hook_register(plugin_input_hook_fn callback, void* user_data) {
+    if (!callback) {
+        return -1;
+    }
+
+    // Find free slot
+    int hook_index = -1;
+    for (int i = 0; i < MAX_PLUGIN_INPUT_HOOKS; i++) {
+        if (!plugin_input_hooks[i].in_use) {
+            hook_index = i;
+            break;
+        }
+    }
+
+    if (hook_index < 0) {
+        ESP_LOGW(TAG, "No free plugin input hook slots");
+        return -1;
+    }
+
+    // Register with BSP, passing our index as user_data
+    int bsp_id = bsp_input_hook_register(plugin_input_hook_wrapper, (void*)(intptr_t)hook_index);
+    if (bsp_id < 0) {
+        ESP_LOGW(TAG, "Failed to register BSP input hook");
+        return -1;
+    }
+
+    plugin_input_hooks[hook_index].bsp_hook_id = bsp_id;
+    plugin_input_hooks[hook_index].callback = callback;
+    plugin_input_hooks[hook_index].user_data = user_data;
+    plugin_input_hooks[hook_index].in_use = true;
+
+    ESP_LOGI(TAG, "Registered plugin input hook %d (BSP hook %d)", hook_index, bsp_id);
+    return hook_index;
+}
+
+void plugin_input_hook_unregister(int hook_id) {
+    if (hook_id < 0 || hook_id >= MAX_PLUGIN_INPUT_HOOKS) {
+        return;
+    }
+
+    plugin_input_hook_entry_t* entry = &plugin_input_hooks[hook_id];
+    if (!entry->in_use) {
+        return;
+    }
+
+    bsp_input_hook_unregister(entry->bsp_hook_id);
+
+    entry->bsp_hook_id = -1;
+    entry->callback = NULL;
+    entry->user_data = NULL;
+    entry->in_use = false;
+
+    ESP_LOGI(TAG, "Unregistered plugin input hook %d", hook_id);
+}
+
+bool plugin_input_inject(plugin_input_event_t* event) {
+    if (!event) {
+        return false;
+    }
+
+    bsp_input_event_t bsp_event = {0};
+    bsp_event.type = event->type;
+
+    switch (event->type) {
+        case INPUT_EVENT_TYPE_NAVIGATION:
+            bsp_event.args_navigation.key = event->key;
+            bsp_event.args_navigation.state = event->state;
+            bsp_event.args_navigation.modifiers = event->modifiers;
+            break;
+        case INPUT_EVENT_TYPE_KEYBOARD:
+            bsp_event.args_keyboard.ascii = (char)event->key;
+            bsp_event.args_keyboard.utf8 = NULL;
+            bsp_event.args_keyboard.modifiers = event->modifiers;
+            break;
+        case INPUT_EVENT_TYPE_SCANCODE:
+            bsp_event.args_scancode.scancode = event->key;
+            if (!event->state) {
+                bsp_event.args_scancode.scancode |= BSP_INPUT_SCANCODE_RELEASE_MODIFIER;
+            }
+            break;
+        default:
+            return false;
+    }
+
+    return bsp_input_inject_event(&bsp_event) == ESP_OK;
+}
+
+// ============================================
 // Input API Implementation
 // ============================================
 
@@ -199,6 +341,123 @@ bool plugin_input_poll(plugin_input_event_t* event, uint32_t timeout_ms) {
 bool plugin_input_get_key_state(uint32_t key) {
     // TODO: Implement direct key state query
     return false;
+}
+
+// ============================================
+// LED API Implementation
+// ============================================
+
+#include "bsp/led.h"
+
+// Plugin LED overlay system
+// Plugins set LEDs in this overlay; it's merged with system state before sending
+#define PLUGIN_LED_COUNT 6
+static uint8_t plugin_led_overlay[PLUGIN_LED_COUNT * 3] = {0};  // RGB values
+static uint8_t plugin_led_pending_clear = 0;  // LEDs that need to be explicitly cleared
+static uint8_t plugin_led_mask = 0;  // Bit mask: which LEDs are controlled by plugins
+
+bool plugin_led_set_brightness(uint8_t percentage) {
+    return bsp_led_set_brightness(percentage) == ESP_OK;
+}
+
+bool plugin_led_get_brightness(uint8_t* out_percentage) {
+    if (!out_percentage) return false;
+    return bsp_led_get_brightness(out_percentage) == ESP_OK;
+}
+
+bool plugin_led_set_mode(bool automatic) {
+    return bsp_led_set_mode(automatic) == ESP_OK;
+}
+
+bool plugin_led_get_mode(bool* out_automatic) {
+    if (!out_automatic) return false;
+    return bsp_led_get_mode(out_automatic) == ESP_OK;
+}
+
+bool plugin_led_set_pixel(uint32_t index, uint32_t color) {
+    if (index >= PLUGIN_LED_COUNT) return false;
+    uint8_t red   = (color >> 16) & 0xFF;
+    uint8_t green = (color >> 8) & 0xFF;
+    uint8_t blue  = color & 0xFF;
+    return plugin_led_set_pixel_rgb(index, red, green, blue);
+}
+
+bool plugin_led_set_pixel_rgb(uint32_t index, uint8_t red, uint8_t green, uint8_t blue) {
+    if (index >= PLUGIN_LED_COUNT) return false;
+
+    // Store in plugin overlay
+    plugin_led_overlay[index * 3 + 0] = red;
+    plugin_led_overlay[index * 3 + 1] = green;
+    plugin_led_overlay[index * 3 + 2] = blue;
+
+    // Mark this LED as plugin-controlled (or mark for clear if setting to black)
+    if (red == 0 && green == 0 && blue == 0) {
+        // If LED was previously controlled, mark it for explicit clear
+        if (plugin_led_mask & (1 << index)) {
+            plugin_led_pending_clear |= (1 << index);
+        }
+        plugin_led_mask &= ~(1 << index);  // Clear mask bit
+    } else {
+        plugin_led_pending_clear &= ~(1 << index);  // Cancel any pending clear
+        plugin_led_mask |= (1 << index);   // Set mask bit
+    }
+
+    return true;
+}
+
+bool plugin_led_set_pixel_hsv(uint32_t index, uint16_t hue, uint8_t saturation, uint8_t value) {
+    if (index >= PLUGIN_LED_COUNT) return false;
+    // Convert HSV to RGB and store in overlay
+    // Simplified conversion - use BSP function then read back
+    bsp_led_set_pixel_hsv(index, hue, saturation, value);
+    // The BSP already set it, just mark as plugin-controlled
+    plugin_led_mask |= (1 << index);
+    return true;
+}
+
+bool plugin_led_send(void) {
+    // Apply plugin overlay to BSP LED data, then send
+    for (int i = 0; i < PLUGIN_LED_COUNT; i++) {
+        if (plugin_led_mask & (1 << i)) {
+            // This LED is controlled by a plugin - set it in the BSP buffer
+            bsp_led_set_pixel_rgb(i,
+                plugin_led_overlay[i * 3 + 0],
+                plugin_led_overlay[i * 3 + 1],
+                plugin_led_overlay[i * 3 + 2]);
+        } else if (plugin_led_pending_clear & (1 << i)) {
+            // This LED was just released by a plugin - explicitly set to black
+            bsp_led_set_pixel_rgb(i, 0, 0, 0);
+            plugin_led_pending_clear &= ~(1 << i);  // Clear the pending flag
+        }
+        // LEDs not in mask and not pending clear keep their BSP/system values
+    }
+    return bsp_led_send() == ESP_OK;
+}
+
+bool plugin_led_clear(void) {
+    // Clear only plugin-controlled LEDs
+    for (int i = 0; i < PLUGIN_LED_COUNT; i++) {
+        if (plugin_led_mask & (1 << i)) {
+            plugin_led_overlay[i * 3 + 0] = 0;
+            plugin_led_overlay[i * 3 + 1] = 0;
+            plugin_led_overlay[i * 3 + 2] = 0;
+            bsp_led_set_pixel_rgb(i, 0, 0, 0);
+        }
+    }
+    plugin_led_mask = 0;
+    return bsp_led_send() == ESP_OK;
+}
+
+// Called by launcher before system LED updates to apply plugin overlay
+void plugin_api_apply_led_overlay(void) {
+    for (int i = 0; i < PLUGIN_LED_COUNT; i++) {
+        if (plugin_led_mask & (1 << i)) {
+            bsp_led_set_pixel_rgb(i,
+                plugin_led_overlay[i * 3 + 0],
+                plugin_led_overlay[i * 3 + 1],
+                plugin_led_overlay[i * 3 + 2]);
+        }
+    }
 }
 
 // ============================================

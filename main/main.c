@@ -258,9 +258,9 @@ void app_main(void) {
     startup_screen("Applying settings...");
     device_settings_apply();
 
-    // Configure LEDs
+    // Configure LEDs - use manual mode so plugins can control individual LEDs
     bsp_led_clear();
-    bsp_led_set_mode(true);
+    bsp_led_set_mode(false);
 
     // Initialize filesystems
     startup_screen("Mounting FAT filesystem...");

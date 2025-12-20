@@ -181,9 +181,16 @@ int plugin_status_get_draw_y(void);
 // Host API: Input
 // ============================================
 
+// Input event types (matches bsp_input_event_type_t)
+#define PLUGIN_INPUT_EVENT_TYPE_NONE       0
+#define PLUGIN_INPUT_EVENT_TYPE_NAVIGATION 1
+#define PLUGIN_INPUT_EVENT_TYPE_KEYBOARD   2
+#define PLUGIN_INPUT_EVENT_TYPE_ACTION     3
+#define PLUGIN_INPUT_EVENT_TYPE_SCANCODE   4
+
 // Input event structure
 typedef struct {
-    uint32_t type;          // Event type
+    uint32_t type;          // Event type (PLUGIN_INPUT_EVENT_TYPE_*)
     uint32_t key;           // Key code
     bool state;             // true = pressed, false = released
     uint32_t modifiers;     // Modifier keys state
@@ -195,6 +202,82 @@ bool plugin_input_poll(plugin_input_event_t* event, uint32_t timeout_ms);
 
 // Get current state of specific key
 bool plugin_input_get_key_state(uint32_t key);
+
+// ============================================
+// Host API: Input Hooks
+// ============================================
+
+// Input hook callback type
+// Called for every input event before it reaches the application
+// Return true if the event was consumed (should not be processed by application)
+// Return false to pass the event through to normal processing
+typedef bool (*plugin_input_hook_fn)(plugin_input_event_t* event, void* user_data);
+
+// Register an input hook
+// Hooks are called in registration order for every input event
+// If any hook returns true, the event is consumed and not queued
+// Returns: hook_id (>=0) on success, -1 on error
+int plugin_input_hook_register(plugin_input_hook_fn callback, void* user_data);
+
+// Unregister an input hook
+void plugin_input_hook_unregister(int hook_id);
+
+// Inject a synthetic input event into the input queue
+// This bypasses hooks and directly queues the event
+// Returns: true on success, false on error
+bool plugin_input_inject(plugin_input_event_t* event);
+
+// ============================================
+// Host API: RGB LEDs
+// ============================================
+
+// Number of RGB LEDs available on the device
+#define PLUGIN_LED_COUNT 6
+
+// Set overall LED brightness (0-100%)
+// Returns: true on success
+bool plugin_led_set_brightness(uint8_t percentage);
+
+// Get overall LED brightness (0-100%)
+// Returns: true on success
+bool plugin_led_get_brightness(uint8_t* out_percentage);
+
+// Set LED mode (true = automatic/system control, false = manual/plugin control)
+// Must set to false (manual) before controlling LEDs directly
+// Returns: true on success
+bool plugin_led_set_mode(bool automatic);
+
+// Get current LED mode
+// Returns: true on success
+bool plugin_led_get_mode(bool* out_automatic);
+
+// Set a single LED pixel color using 0xRRGGBB format
+// Index: 0-5 for the 6 LEDs
+// Does not update hardware until plugin_led_send() is called
+// Returns: true on success
+bool plugin_led_set_pixel(uint32_t index, uint32_t color);
+
+// Set a single LED pixel color using RGB components
+// Index: 0-5 for the 6 LEDs
+// Does not update hardware until plugin_led_send() is called
+// Returns: true on success
+bool plugin_led_set_pixel_rgb(uint32_t index, uint8_t red, uint8_t green, uint8_t blue);
+
+// Set a single LED pixel color using HSV
+// hue: 0-65535 (maps to 0-360 degrees)
+// saturation: 0-255
+// value: 0-255
+// Does not update hardware until plugin_led_send() is called
+// Returns: true on success
+bool plugin_led_set_pixel_hsv(uint32_t index, uint16_t hue, uint8_t saturation, uint8_t value);
+
+// Send LED data to hardware (call after setting pixels)
+// Returns: true on success
+bool plugin_led_send(void);
+
+// Clear all LEDs (sets all to black and sends to hardware)
+// Returns: true on success
+bool plugin_led_clear(void);
 
 // ============================================
 // Host API: Storage (Sandboxed to plugin directory)

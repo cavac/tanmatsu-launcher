@@ -27,6 +27,22 @@ extern char const symbol_plugin_status_get_draw_y[] asm("plugin_status_get_draw_
 extern char const symbol_plugin_input_poll[] asm("plugin_input_poll");
 extern char const symbol_plugin_input_get_key_state[] asm("plugin_input_get_key_state");
 
+// Input Hook API
+extern char const symbol_plugin_input_hook_register[] asm("plugin_input_hook_register");
+extern char const symbol_plugin_input_hook_unregister[] asm("plugin_input_hook_unregister");
+extern char const symbol_plugin_input_inject[] asm("plugin_input_inject");
+
+// LED API
+extern char const symbol_plugin_led_set_brightness[] asm("plugin_led_set_brightness");
+extern char const symbol_plugin_led_get_brightness[] asm("plugin_led_get_brightness");
+extern char const symbol_plugin_led_set_mode[] asm("plugin_led_set_mode");
+extern char const symbol_plugin_led_get_mode[] asm("plugin_led_get_mode");
+extern char const symbol_plugin_led_set_pixel[] asm("plugin_led_set_pixel");
+extern char const symbol_plugin_led_set_pixel_rgb[] asm("plugin_led_set_pixel_rgb");
+extern char const symbol_plugin_led_set_pixel_hsv[] asm("plugin_led_set_pixel_hsv");
+extern char const symbol_plugin_led_send[] asm("plugin_led_send");
+extern char const symbol_plugin_led_clear[] asm("plugin_led_clear");
+
 // Storage API
 extern char const symbol_plugin_storage_open[] asm("plugin_storage_open");
 extern char const symbol_plugin_storage_read[] asm("plugin_storage_read");
@@ -91,6 +107,22 @@ static kbelf_builtin_sym const symbols[] = {
     // Input API
     { .name = "plugin_input_poll", .vaddr = (size_t) symbol_plugin_input_poll },
     { .name = "plugin_input_get_key_state", .vaddr = (size_t) symbol_plugin_input_get_key_state },
+
+    // Input Hook API
+    { .name = "plugin_input_hook_register", .vaddr = (size_t) symbol_plugin_input_hook_register },
+    { .name = "plugin_input_hook_unregister", .vaddr = (size_t) symbol_plugin_input_hook_unregister },
+    { .name = "plugin_input_inject", .vaddr = (size_t) symbol_plugin_input_inject },
+
+    // LED API
+    { .name = "plugin_led_set_brightness", .vaddr = (size_t) symbol_plugin_led_set_brightness },
+    { .name = "plugin_led_get_brightness", .vaddr = (size_t) symbol_plugin_led_get_brightness },
+    { .name = "plugin_led_set_mode", .vaddr = (size_t) symbol_plugin_led_set_mode },
+    { .name = "plugin_led_get_mode", .vaddr = (size_t) symbol_plugin_led_get_mode },
+    { .name = "plugin_led_set_pixel", .vaddr = (size_t) symbol_plugin_led_set_pixel },
+    { .name = "plugin_led_set_pixel_rgb", .vaddr = (size_t) symbol_plugin_led_set_pixel_rgb },
+    { .name = "plugin_led_set_pixel_hsv", .vaddr = (size_t) symbol_plugin_led_set_pixel_hsv },
+    { .name = "plugin_led_send", .vaddr = (size_t) symbol_plugin_led_send },
+    { .name = "plugin_led_clear", .vaddr = (size_t) symbol_plugin_led_clear },
 
     // Storage API
     { .name = "plugin_storage_open", .vaddr = (size_t) symbol_plugin_storage_open },

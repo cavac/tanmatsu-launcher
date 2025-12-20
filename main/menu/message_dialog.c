@@ -1,6 +1,7 @@
 #include "message_dialog.h"
 #include <time.h>
 #include "bsp/input.h"
+#include "bsp/led.h"
 #include "bsp/power.h"
 #include "common/display.h"
 #include "common/theme.h"
@@ -208,6 +209,47 @@ void render_base_screen_statusbar(pax_buf_t* buffer, gui_theme_t* theme, bool ba
         int widget_start_y = theme->header.vertical_margin;
         plugin_icontext_t plugin_widgets[8];
         plugin_manager_get_status_widgets(plugin_widgets, 8, widget_start_x, widget_start_y);
+    }
+
+    // Update status LEDs (manual mode replaces coprocessor automatic mode)
+    // LED 0: WiFi status indicator
+    // LED 1: Power/battery status indicator
+    // LEDs 2-5: Available for plugins
+    // Only update LEDs if WiFi stack is initialized (system is ready)
+    if (wifi_stack_get_initialized()) {
+        // WiFi LED (LED 0): Green if connected, off if not
+        if (wifi_connection_is_connected()) {
+            bsp_led_set_pixel_rgb(0, 0, 64, 0);  // Dim green when connected
+        } else {
+            bsp_led_set_pixel_rgb(0, 0, 0, 0);   // Off when disconnected
+        }
+
+        // Power LED (LED 1): Color based on battery state
+        bsp_power_battery_information_t bat_info = {0};
+        bsp_power_get_battery_information(&bat_info);
+
+        if (!bat_info.battery_available) {
+            // No battery - dim blue for external power
+            bsp_led_set_pixel_rgb(1, 0, 0, 64);
+        } else if (bat_info.battery_charging) {
+            // Charging - orange/amber
+            bsp_led_set_pixel_rgb(1, 64, 32, 0);
+        } else if (bat_info.remaining_percentage < 15) {
+            // Low battery - red
+            bsp_led_set_pixel_rgb(1, 64, 0, 0);
+        } else if (bat_info.remaining_percentage < 30) {
+            // Medium-low battery - yellow
+            bsp_led_set_pixel_rgb(1, 64, 64, 0);
+        } else {
+            // Good battery - green
+            bsp_led_set_pixel_rgb(1, 0, 64, 0);
+        }
+
+        // Apply plugin LED overlay (preserves plugin-controlled LEDs)
+        plugin_api_apply_led_overlay();
+
+        // Send LED data to coprocessor
+        bsp_led_send();
     }
 }
 

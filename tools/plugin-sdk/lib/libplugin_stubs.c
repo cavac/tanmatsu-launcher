@@ -25,6 +25,22 @@ int plugin_status_get_draw_y(void) { return 0; }
 int plugin_input_poll(void* event) { return 0; }
 int plugin_input_get_key_state(int key) { return 0; }
 
+// Input Hook API
+int plugin_input_hook_register(void* callback, void* user_data) { return 0; }
+void plugin_input_hook_unregister(int hook_id) {}
+int plugin_input_inject(void* event) { return 0; }
+
+// LED API
+int plugin_led_set_brightness(unsigned char percentage) { return 0; }
+int plugin_led_get_brightness(unsigned char* out_percentage) { return 0; }
+int plugin_led_set_mode(int automatic) { return 0; }
+int plugin_led_get_mode(int* out_automatic) { return 0; }
+int plugin_led_set_pixel(unsigned int index, unsigned int color) { return 0; }
+int plugin_led_set_pixel_rgb(unsigned int index, unsigned char r, unsigned char g, unsigned char b) { return 0; }
+int plugin_led_set_pixel_hsv(unsigned int index, unsigned short hue, unsigned char sat, unsigned char val) { return 0; }
+int plugin_led_send(void) { return 0; }
+int plugin_led_clear(void) { return 0; }
+
 // Storage API
 void* plugin_storage_open(const char* path, const char* mode) { return 0; }
 int plugin_storage_read(void* file, void* buffer, int size) { return 0; }
