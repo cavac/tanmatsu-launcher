@@ -305,6 +305,11 @@ uint32_t plugin_get_tick_ms(void) {
     return (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS);
 }
 
+bool plugin_should_stop(plugin_context_t* ctx) {
+    if (ctx == NULL) return true;
+    return ctx->stop_requested;
+}
+
 // ============================================
 // Menu API Implementation
 // ============================================

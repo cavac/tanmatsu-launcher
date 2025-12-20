@@ -47,6 +47,7 @@ extern char const symbol_plugin_free[] asm("plugin_free");
 // Timer API
 extern char const symbol_plugin_delay_ms[] asm("plugin_delay_ms");
 extern char const symbol_plugin_get_tick_ms[] asm("plugin_get_tick_ms");
+extern char const symbol_plugin_should_stop[] asm("plugin_should_stop");
 
 // Menu API
 extern char const symbol_plugin_menu_add_item[] asm("plugin_menu_add_item");
@@ -111,6 +112,7 @@ static kbelf_builtin_sym const symbols[] = {
     // Timer API
     { .name = "plugin_delay_ms", .vaddr = (size_t) symbol_plugin_delay_ms },
     { .name = "plugin_get_tick_ms", .vaddr = (size_t) symbol_plugin_get_tick_ms },
+    { .name = "plugin_should_stop", .vaddr = (size_t) symbol_plugin_should_stop },
 
     // Menu API
     { .name = "plugin_menu_add_item", .vaddr = (size_t) symbol_plugin_menu_add_item },

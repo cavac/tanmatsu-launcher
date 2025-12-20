@@ -249,6 +249,10 @@ void plugin_delay_ms(uint32_t ms);
 // Get current system tick in milliseconds
 uint32_t plugin_get_tick_ms(void);
 
+// Check if stop has been requested (for service plugins)
+// Service plugins should check this regularly and exit when true
+bool plugin_should_stop(plugin_context_t* ctx);
+
 // ============================================
 // Host API: Menu Integration (for PLUGIN_TYPE_MENU)
 // ============================================

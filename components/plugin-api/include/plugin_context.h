@@ -36,6 +36,10 @@ struct plugin_context {
     // Service task handle (for PLUGIN_TYPE_SERVICE)
     void* task_handle;
 
+    // Service stop control
+    volatile bool stop_requested;   // Set by stop_service to signal shutdown
+    volatile bool task_running;     // Set by task to indicate it's still running
+
     // Status widget ID (if registered)
     int status_widget_id;
 

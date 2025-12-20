@@ -13,6 +13,7 @@
 #include "nvs_flash.h"
 #include "nvs.h"
 #include "cJSON.h"
+#define KBELF_REVEAL_PRIVATE
 #include "kbelf.h"
 #include "fastopen.h"
 #include "freertos/FreeRTOS.h"
@@ -399,14 +400,32 @@ plugin_context_t* plugin_manager_load(const char* plugin_path) {
     }
 
     // Find plugin registration
-    // The _plugin_registration symbol should be exported
-    // For now, we assume the plugin's init will have set up what we need
+    // The _plugin_registration is placed in .plugin_info section at VMA 0
+    kbelf_addr reg_addr = kbelf_inst_getvaddr(dyn->exec_inst, 0);
+    if (reg_addr != 0) {
+        plugin_registration_t* reg = (plugin_registration_t*)reg_addr;
 
-    // Call plugin's init function via the entry point
-    kbelf_addr entry_addr = kbelf_dyn_entrypoint(dyn);
-    if (entry_addr != 0) {
-        // Entry point is the plugin_get_registration function or similar
-        ESP_LOGI(TAG, "Plugin entry point at %p", (void*)entry_addr);
+        // Validate the registration
+        if (reg->magic == TANMATSU_PLUGIN_MAGIC) {
+            ctx->registration = reg;
+            ESP_LOGI(TAG, "Found plugin registration at %p", (void*)reg_addr);
+
+            // Call the plugin's init function if available
+            if (reg->entry.init != NULL) {
+                int init_result = reg->entry.init(ctx);
+                if (init_result != 0) {
+                    ESP_LOGE(TAG, "Plugin init failed with code %d", init_result);
+                    goto error_cleanup;
+                }
+            }
+        } else {
+            ESP_LOGE(TAG, "Invalid plugin magic: 0x%08lx (expected 0x%08x)",
+                     (unsigned long)reg->magic, TANMATSU_PLUGIN_MAGIC);
+            goto error_cleanup;
+        }
+    } else {
+        ESP_LOGE(TAG, "Could not find plugin registration");
+        goto error_cleanup;
     }
 
     // Add to loaded plugins
@@ -526,12 +545,14 @@ static void plugin_service_task(void* arg) {
     plugin_context_t* ctx = (plugin_context_t*)arg;
 
     ESP_LOGI(TAG, "Service task started for plugin: %s", ctx->plugin_slug);
+    ctx->task_running = true;
 
     if (ctx->registration && ctx->registration->entry.service_run) {
         ctx->registration->entry.service_run(ctx);
     }
 
     ESP_LOGI(TAG, "Service task ended for plugin: %s", ctx->plugin_slug);
+    ctx->task_running = false;
     ctx->state = PLUGIN_STATE_STOPPED;
     ctx->task_handle = NULL;
     vTaskDelete(NULL);
@@ -543,6 +564,10 @@ bool plugin_manager_start_service(plugin_context_t* ctx) {
     }
 
     ESP_LOGI(TAG, "Starting service plugin: %s", ctx->plugin_slug);
+
+    // Initialize control flags
+    ctx->stop_requested = false;
+    ctx->task_running = false;
 
     TaskHandle_t task;
     BaseType_t ret = xTaskCreate(
@@ -566,18 +591,40 @@ bool plugin_manager_start_service(plugin_context_t* ctx) {
 }
 
 bool plugin_manager_stop_service(plugin_context_t* ctx) {
-    if (ctx == NULL || ctx->state != PLUGIN_STATE_RUNNING) {
+    if (ctx == NULL) {
         return false;
+    }
+
+    // Check if already stopped (task may have ended on its own)
+    if (ctx->state != PLUGIN_STATE_RUNNING && !ctx->task_running) {
+        ESP_LOGI(TAG, "Service plugin already stopped: %s", ctx->plugin_slug);
+        return true;
     }
 
     ESP_LOGI(TAG, "Stopping service plugin: %s", ctx->plugin_slug);
 
-    if (ctx->task_handle != NULL) {
-        vTaskDelete((TaskHandle_t)ctx->task_handle);
-        ctx->task_handle = NULL;
+    // Signal the plugin to stop
+    ctx->stop_requested = true;
+
+    // Wait for the task to finish (with timeout)
+    int timeout_ms = 5000;  // 5 second timeout
+    while (ctx->task_running && timeout_ms > 0) {
+        vTaskDelay(pdMS_TO_TICKS(100));
+        timeout_ms -= 100;
+    }
+
+    if (ctx->task_running) {
+        // Task didn't stop gracefully, force delete it
+        ESP_LOGW(TAG, "Force stopping service plugin: %s", ctx->plugin_slug);
+        TaskHandle_t task = (TaskHandle_t)ctx->task_handle;
+        if (task != NULL) {
+            vTaskDelete(task);
+            ctx->task_handle = NULL;
+        }
     }
 
     ctx->state = PLUGIN_STATE_STOPPED;
+    ctx->stop_requested = false;
 
     return true;
 }

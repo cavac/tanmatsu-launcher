@@ -45,6 +45,7 @@ void plugin_free(void* ptr) {}
 // Timer API
 void plugin_delay_ms(unsigned int ms) {}
 unsigned int plugin_get_tick_ms(void) { return 0; }
+int plugin_should_stop(void* ctx) { return 0; }
 
 // Menu API
 int plugin_menu_add_item(const char* label, void* callback, void* user_data) { return 0; }
