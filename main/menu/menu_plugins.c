@@ -166,10 +166,7 @@ void menu_plugins(pax_buf_t* buffer, gui_theme_t* theme) {
                                         plugin_context_t* ctx =
                                             plugin_manager_get_by_slug(plugin->slug);
                                         if (ctx) {
-                                            if (plugin_manager_unload(ctx)) {
-                                                message_dialog(get_icon(ICON_INFO),
-                                                               "Plugin", "Plugin unloaded", "OK");
-                                            } else {
+                                            if (!plugin_manager_unload(ctx)) {
                                                 message_dialog(get_icon(ICON_ERROR),
                                                                "Error", "Failed to unload plugin", "OK");
                                             }
@@ -179,9 +176,6 @@ void menu_plugins(pax_buf_t* buffer, gui_theme_t* theme) {
                                         plugin_context_t* ctx =
                                             plugin_manager_load(plugin->path);
                                         if (ctx) {
-                                            message_dialog(get_icon(ICON_INFO),
-                                                           "Plugin", "Plugin loaded", "OK");
-
                                             // Start service if it's a service plugin
                                             if (plugin->type == PLUGIN_TYPE_SERVICE) {
                                                 plugin_manager_start_service(ctx);

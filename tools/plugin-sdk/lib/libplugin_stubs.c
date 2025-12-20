@@ -16,10 +16,14 @@ void plugin_display_flush_region(int x, int y, int w, int h) {}
 // Status Bar Widget API
 int plugin_status_widget_register(void* callback, void* user_data) { return 0; }
 void plugin_status_widget_unregister(int widget_id) {}
-void plugin_status_draw_rect(int x, int y, int w, int h, unsigned int color) {}
-void plugin_status_draw_circle(int x, int y, int r, unsigned int color) {}
-int plugin_status_get_draw_x(void) { return 0; }
-int plugin_status_get_draw_y(void) { return 0; }
+
+// Drawing Primitives API
+void plugin_draw_circle(void* buffer, int cx, int cy, int radius, unsigned int color) {}
+void plugin_draw_rect(void* buffer, int x, int y, int w, int h, unsigned int color) {}
+void plugin_draw_rect_outline(void* buffer, int x, int y, int w, int h, unsigned int color) {}
+void plugin_set_pixel(void* buffer, int x, int y, unsigned int color) {}
+void plugin_draw_line(void* buffer, int x0, int y0, int x1, int y1, unsigned int color) {}
+int plugin_draw_text(void* buffer, int x, int y, int font_size, unsigned int color, const char* text) { return 0; }
 
 // Input API
 int plugin_input_poll(void* event) { return 0; }

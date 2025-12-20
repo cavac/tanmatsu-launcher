@@ -20,6 +20,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "pax_gfx.h"
+#include "pax_fonts.h"
 
 #include "common/display.h"
 #include "bsp/input.h"
@@ -40,8 +41,6 @@ typedef struct {
 } status_widget_entry_t;
 
 static status_widget_entry_t status_widgets[MAX_STATUS_WIDGETS] = {0};
-static int status_widget_draw_x = 0;  // Updated during render
-static int status_widget_draw_y = 0;
 
 // Display refresh control
 static volatile bool display_refresh_requested = false;
@@ -128,44 +127,59 @@ void plugin_status_widget_unregister(int widget_id) {
     }
 }
 
-void plugin_status_draw_rect(int x, int y, int w, int h, uint32_t color) {
-    pax_buf_t* buf = display_get_buffer();
-    if (buf) {
-        pax_draw_rect(buf, color, x, y, w, h);
-    }
+// ============================================
+// Drawing Primitives API Implementation
+// ============================================
+
+void plugin_draw_circle(pax_buf_t* buffer, int cx, int cy, int radius, uint32_t color) {
+    if (!buffer) return;
+    pax_draw_circle(buffer, (pax_col_t)color, (float)cx, (float)cy, (float)radius);
 }
 
-void plugin_status_draw_circle(int x, int y, int radius, uint32_t color) {
-    pax_buf_t* buf = display_get_buffer();
-    if (buf) {
-        pax_draw_circle(buf, color, x, y, radius);
-    }
+void plugin_draw_rect(pax_buf_t* buffer, int x, int y, int w, int h, uint32_t color) {
+    if (!buffer) return;
+    pax_draw_rect(buffer, (pax_col_t)color, (float)x, (float)y, (float)w, (float)h);
 }
 
-int plugin_status_get_draw_x(void) {
-    return status_widget_draw_x;
+void plugin_draw_rect_outline(pax_buf_t* buffer, int x, int y, int w, int h, uint32_t color) {
+    if (!buffer) return;
+    pax_outline_rect(buffer, (pax_col_t)color, (float)x, (float)y, (float)w, (float)h);
 }
 
-int plugin_status_get_draw_y(void) {
-    return status_widget_draw_y;
+void plugin_set_pixel(pax_buf_t* buffer, int x, int y, uint32_t color) {
+    if (!buffer) return;
+    pax_set_pixel(buffer, (pax_col_t)color, x, y);
 }
 
-// Called by render_base_screen_statusbar to get plugin widgets
-// Returns number of widgets populated
-size_t plugin_api_get_status_widgets(plugin_icontext_t* out, size_t max, int start_x, int start_y) {
-    status_widget_draw_x = start_x;
-    status_widget_draw_y = start_y;
+void plugin_draw_line(pax_buf_t* buffer, int x0, int y0, int x1, int y1, uint32_t color) {
+    if (!buffer) return;
+    pax_draw_line(buffer, (pax_col_t)color, (float)x0, (float)y0, (float)x1, (float)y1);
+}
 
-    size_t count = 0;
-    for (int i = 0; i < MAX_STATUS_WIDGETS && count < max; i++) {
+int plugin_draw_text(pax_buf_t* buffer, int x, int y, int font_size, uint32_t color, const char* text) {
+    if (!buffer || !text) return 0;
+    pax_vec2f dims = pax_draw_text(buffer, (pax_col_t)color, pax_font_sky_mono, (float)font_size, (float)x, (float)y, text);
+    return (int)dims.x;
+}
+
+// Called by render_base_screen_statusbar to render plugin status widgets
+// Widgets draw right-to-left from x_right position
+// Returns total width used by all widgets
+int plugin_api_render_status_widgets(pax_buf_t* buffer, int x_right, int y, int height) {
+    int total_width = 0;
+    int current_x = x_right;
+
+    for (int i = 0; i < MAX_STATUS_WIDGETS; i++) {
         if (status_widgets[i].active && status_widgets[i].callback) {
-            out[count] = status_widgets[i].callback(status_widgets[i].user_data);
-            count++;
-            // Advance X position for next widget (32px icon width + padding)
-            status_widget_draw_x += 36;
+            int widget_width = status_widgets[i].callback(buffer, current_x, y, height,
+                                                           status_widgets[i].user_data);
+            if (widget_width > 0) {
+                current_x -= widget_width;
+                total_width += widget_width;
+            }
         }
     }
-    return count;
+    return total_width;
 }
 
 // ============================================

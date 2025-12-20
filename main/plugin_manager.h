@@ -119,10 +119,10 @@ void plugin_api_clear_refresh_request(void);
 // Status Widget Integration
 // ============================================
 
-// Get status widgets from loaded plugins
+// Render plugin status widgets right-to-left from x_right position
 // Called by render_base_screen_statusbar()
-size_t plugin_manager_get_status_widgets(plugin_icontext_t* out, size_t max,
-                                          int start_x, int start_y);
+// Returns total width used by all widgets
+int plugin_api_render_status_widgets(pax_buf_t* buffer, int x_right, int y, int height);
 
 // ============================================
 // LED Overlay Integration

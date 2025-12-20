@@ -18,10 +18,14 @@ extern char const symbol_plugin_display_flush_region[] asm("plugin_display_flush
 // Status Bar Widget API
 extern char const symbol_plugin_status_widget_register[] asm("plugin_status_widget_register");
 extern char const symbol_plugin_status_widget_unregister[] asm("plugin_status_widget_unregister");
-extern char const symbol_plugin_status_draw_rect[] asm("plugin_status_draw_rect");
-extern char const symbol_plugin_status_draw_circle[] asm("plugin_status_draw_circle");
-extern char const symbol_plugin_status_get_draw_x[] asm("plugin_status_get_draw_x");
-extern char const symbol_plugin_status_get_draw_y[] asm("plugin_status_get_draw_y");
+
+// Drawing Primitives API
+extern char const symbol_plugin_draw_circle[] asm("plugin_draw_circle");
+extern char const symbol_plugin_draw_rect[] asm("plugin_draw_rect");
+extern char const symbol_plugin_draw_rect_outline[] asm("plugin_draw_rect_outline");
+extern char const symbol_plugin_set_pixel[] asm("plugin_set_pixel");
+extern char const symbol_plugin_draw_line[] asm("plugin_draw_line");
+extern char const symbol_plugin_draw_text[] asm("plugin_draw_text");
 
 // Input API
 extern char const symbol_plugin_input_poll[] asm("plugin_input_poll");
@@ -99,10 +103,14 @@ static kbelf_builtin_sym const symbols[] = {
     // Status Bar Widget API
     { .name = "plugin_status_widget_register", .vaddr = (size_t) symbol_plugin_status_widget_register },
     { .name = "plugin_status_widget_unregister", .vaddr = (size_t) symbol_plugin_status_widget_unregister },
-    { .name = "plugin_status_draw_rect", .vaddr = (size_t) symbol_plugin_status_draw_rect },
-    { .name = "plugin_status_draw_circle", .vaddr = (size_t) symbol_plugin_status_draw_circle },
-    { .name = "plugin_status_get_draw_x", .vaddr = (size_t) symbol_plugin_status_get_draw_x },
-    { .name = "plugin_status_get_draw_y", .vaddr = (size_t) symbol_plugin_status_get_draw_y },
+
+    // Drawing Primitives API
+    { .name = "plugin_draw_circle", .vaddr = (size_t) symbol_plugin_draw_circle },
+    { .name = "plugin_draw_rect", .vaddr = (size_t) symbol_plugin_draw_rect },
+    { .name = "plugin_draw_rect_outline", .vaddr = (size_t) symbol_plugin_draw_rect_outline },
+    { .name = "plugin_set_pixel", .vaddr = (size_t) symbol_plugin_set_pixel },
+    { .name = "plugin_draw_line", .vaddr = (size_t) symbol_plugin_draw_line },
+    { .name = "plugin_draw_text", .vaddr = (size_t) symbol_plugin_draw_text },
 
     // Input API
     { .name = "plugin_input_poll", .vaddr = (size_t) symbol_plugin_input_poll },

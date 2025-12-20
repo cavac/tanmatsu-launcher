@@ -160,7 +160,14 @@ void plugin_display_flush_region(int x, int y, int w, int h);
 // ============================================
 
 // Status widget callback type
-typedef plugin_icontext_t (*plugin_status_widget_fn)(void* user_data);
+// Called with:
+//   buffer: display buffer to draw to
+//   x_right: rightmost X position available (draw to the LEFT of this)
+//   y: Y position of the status bar
+//   height: height of the status bar area
+//   user_data: user-provided context
+// Returns: width used by this widget (next widget will be drawn to the left)
+typedef int (*plugin_status_widget_fn)(pax_buf_t* buffer, int x_right, int y, int height, void* user_data);
 
 // Register a status widget to appear in header bar
 // Returns: widget_id (>=0) on success, -1 on error
@@ -169,13 +176,28 @@ int plugin_status_widget_register(plugin_status_widget_fn callback, void* user_d
 // Unregister a status widget
 void plugin_status_widget_unregister(int widget_id);
 
-// Direct drawing functions for status bar area
-void plugin_status_draw_rect(int x, int y, int w, int h, uint32_t color);
-void plugin_status_draw_circle(int x, int y, int radius, uint32_t color);
+// ============================================
+// Host API: Drawing Primitives
+// ============================================
 
-// Get position for plugin status widgets (after built-in widgets)
-int plugin_status_get_draw_x(void);
-int plugin_status_get_draw_y(void);
+// Draw a filled circle
+void plugin_draw_circle(pax_buf_t* buffer, int cx, int cy, int radius, uint32_t color);
+
+// Draw a filled rectangle
+void plugin_draw_rect(pax_buf_t* buffer, int x, int y, int w, int h, uint32_t color);
+
+// Draw a rectangle outline
+void plugin_draw_rect_outline(pax_buf_t* buffer, int x, int y, int w, int h, uint32_t color);
+
+// Set a single pixel
+void plugin_set_pixel(pax_buf_t* buffer, int x, int y, uint32_t color);
+
+// Draw a line from (x0,y0) to (x1,y1)
+void plugin_draw_line(pax_buf_t* buffer, int x0, int y0, int x1, int y1, uint32_t color);
+
+// Draw text (returns width of text drawn)
+// Uses default font with specified size
+int plugin_draw_text(pax_buf_t* buffer, int x, int y, int font_size, uint32_t color, const char* text);
 
 // ============================================
 // Host API: Input

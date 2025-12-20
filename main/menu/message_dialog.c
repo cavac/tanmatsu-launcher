@@ -201,26 +201,14 @@ void render_base_screen_statusbar(pax_buf_t* buffer, gui_theme_t* theme, bool ba
                        header_right, header_right_count, footer_left, footer_left_count, footer_right,
                        footer_right_count);
 
-    // Render plugin status widgets in the header area
+    // Render plugin status widgets in the header area (right-to-left, before system icons)
     if (header) {
-        // Position plugin widgets after the title (approximately 180px from left)
-        // and centered vertically in header
-        int widget_start_x = 180;
-        int widget_start_y = theme->header.vertical_margin;
-        plugin_icontext_t plugin_widgets[8];
-        size_t widget_count = plugin_manager_get_status_widgets(plugin_widgets, 8, widget_start_x, widget_start_y);
-
-        // Draw each plugin widget
-        float current_x = widget_start_x;
-        for (size_t i = 0; i < widget_count; i++) {
-            if (plugin_widgets[i].icon != NULL || plugin_widgets[i].text != NULL) {
-                // Cast plugin_icontext_t to gui_element_icontext_t (same structure)
-                gui_element_icontext_t* widget = (gui_element_icontext_t*)&plugin_widgets[i];
-                float width = gui_icontext_draw(buffer, &theme->header, current_x, widget_start_y,
-                                                widget, 4, theme->header.height);
-                current_x += width + 8;  // Add spacing between widgets
-            }
-        }
+        // Position widgets to the left of the system status icons
+        // System icons start around x=400, so give plugins space before that
+        int widget_x_right = 380;
+        int widget_y = theme->header.vertical_margin;
+        int widget_height = theme->header.height;
+        plugin_api_render_status_widgets(buffer, widget_x_right, widget_y, widget_height);
     }
 
     // Update status LEDs (manual mode replaces coprocessor automatic mode)
