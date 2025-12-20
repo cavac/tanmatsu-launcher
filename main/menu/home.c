@@ -11,6 +11,7 @@
 #include "common/theme.h"
 #include "coprocessor_management.h"
 #include "esp_log.h"
+#include "esp_system.h"
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
 #include "gui_element_footer.h"
@@ -69,7 +70,7 @@ static void execute_action(pax_buf_t* fb, menu_home_action_t action, gui_theme_t
 
 #if defined(CONFIG_BSP_TARGET_TANMATSU) || defined(CONFIG_BSP_TARGET_KONSOOL) || \
     defined(CONFIG_BSP_TARGET_HACKERHOTEL_2026)
-#define FOOTER_LEFT  ((gui_element_icontext_t[]){{get_icon(ICON_F5), "Settings"}, {get_icon(ICON_F6), "USB mode"}}), 2
+#define FOOTER_LEFT  ((gui_element_icontext_t[]){{get_icon(ICON_F3), "Reboot"}, {get_icon(ICON_F5), "Settings"}, {get_icon(ICON_F6), "USB mode"}}), 3
 #define FOOTER_RIGHT ((gui_element_icontext_t[]){{NULL, "↑ / ↓ / ← / → | ⏎ Select"}}), 1
 #elif defined(CONFIG_BSP_TARGET_MCH2022) || defined(CONFIG_BSP_TARGET_KAMI) || defined(CONFIG_BSP_TARGET_KAMI)
 #define FOOTER_LEFT  NULL, 0
@@ -174,6 +175,8 @@ void menu_home(void) {
                             case BSP_INPUT_NAVIGATION_KEY_F3:
                                 if (event.args_navigation.modifiers & BSP_INPUT_MODIFIER_FUNCTION) {
                                     bsp_power_set_radio_state(BSP_POWER_RADIO_STATE_APPLICATION);
+                                } else {
+                                    esp_restart();
                                 }
                                 break;
                             case BSP_INPUT_NAVIGATION_KEY_F4:
