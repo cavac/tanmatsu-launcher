@@ -25,6 +25,8 @@
 #include "menu_settings.h"
 #include "menu/menu_plugins.h"
 #include "pax_gfx.h"
+#include "plugin_manager.h"
+#include "esp_wifi.h"
 #include "pax_matrix.h"
 #include "pax_types.h"
 #include "usb_device.h"
@@ -175,6 +177,10 @@ void menu_home(void) {
                                 if (event.args_navigation.modifiers & BSP_INPUT_MODIFIER_FUNCTION) {
                                     bsp_power_set_radio_state(BSP_POWER_RADIO_STATE_APPLICATION);
                                 } else {
+                                    // Clean shutdown before restart to avoid heap corruption
+                                    plugin_manager_shutdown();
+                                    esp_wifi_stop();
+                                    vTaskDelay(pdMS_TO_TICKS(100));
                                     esp_restart();
                                 }
                                 break;
