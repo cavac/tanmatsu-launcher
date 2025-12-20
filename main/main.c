@@ -43,6 +43,7 @@
 #include "usb_device.h"
 #include "wifi_connection.h"
 #include "wifi_remote.h"
+#include "plugin_manager.h"
 
 #if defined(CONFIG_BSP_TARGET_TANMATSU) || defined(CONFIG_BSP_TARGET_KONSOOL) || \
     defined(CONFIG_BSP_TARGET_HACKERHOTEL_2026)
@@ -359,6 +360,9 @@ void app_main(void) {
     badgelink_start(usb_send_data);
 
     load_icons();
+
+    startup_screen("Initializing plugins...");
+    plugin_manager_init();
 
     bsp_power_set_usb_host_boost_enabled(true);
 

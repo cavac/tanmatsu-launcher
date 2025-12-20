@@ -1,0 +1,542 @@
+// SPDX-License-Identifier: MIT
+// Tanmatsu Plugin API Implementation
+// Provides host functions that plugins can call.
+
+#include "tanmatsu_plugin.h"
+#include "plugin_context.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <errno.h>
+
+#include "esp_log.h"
+#include "esp_heap_caps.h"
+#include "esp_http_client.h"
+#include "nvs_flash.h"
+#include "nvs.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "pax_gfx.h"
+
+#include "common/display.h"
+#include "bsp/input.h"
+#include "fastopen.h"
+
+static const char* TAG = "plugin_api";
+
+// ============================================
+// Status Widget Registry
+// ============================================
+
+#define MAX_STATUS_WIDGETS 8
+
+typedef struct {
+    bool active;
+    plugin_status_widget_fn callback;
+    void* user_data;
+} status_widget_entry_t;
+
+static status_widget_entry_t status_widgets[MAX_STATUS_WIDGETS] = {0};
+static int status_widget_draw_x = 0;  // Updated during render
+static int status_widget_draw_y = 0;
+
+// ============================================
+// Logging API Implementation
+// ============================================
+
+void plugin_log_info(const char* tag, const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    esp_log_writev(ESP_LOG_INFO, tag, fmt, args);
+    va_end(args);
+}
+
+void plugin_log_warn(const char* tag, const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    esp_log_writev(ESP_LOG_WARN, tag, fmt, args);
+    va_end(args);
+}
+
+void plugin_log_error(const char* tag, const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    esp_log_writev(ESP_LOG_ERROR, tag, fmt, args);
+    va_end(args);
+}
+
+// ============================================
+// Display API Implementation
+// ============================================
+
+pax_buf_t* plugin_display_get_buffer(void) {
+    return display_get_buffer();
+}
+
+void plugin_display_flush(void) {
+    display_blit_buffer(display_get_buffer());
+}
+
+void plugin_display_flush_region(int x, int y, int w, int h) {
+    // For now, just do a full flush
+    // TODO: Implement partial update if supported
+    display_blit_buffer(display_get_buffer());
+}
+
+// ============================================
+// Status Bar Widget API Implementation
+// ============================================
+
+int plugin_status_widget_register(plugin_status_widget_fn callback, void* user_data) {
+    for (int i = 0; i < MAX_STATUS_WIDGETS; i++) {
+        if (!status_widgets[i].active) {
+            status_widgets[i].active = true;
+            status_widgets[i].callback = callback;
+            status_widgets[i].user_data = user_data;
+            ESP_LOGI(TAG, "Registered status widget %d", i);
+            return i;
+        }
+    }
+    ESP_LOGW(TAG, "No free status widget slots");
+    return -1;
+}
+
+void plugin_status_widget_unregister(int widget_id) {
+    if (widget_id >= 0 && widget_id < MAX_STATUS_WIDGETS) {
+        status_widgets[widget_id].active = false;
+        status_widgets[widget_id].callback = NULL;
+        status_widgets[widget_id].user_data = NULL;
+        ESP_LOGI(TAG, "Unregistered status widget %d", widget_id);
+    }
+}
+
+void plugin_status_draw_rect(int x, int y, int w, int h, uint32_t color) {
+    pax_buf_t* buf = display_get_buffer();
+    if (buf) {
+        pax_draw_rect(buf, color, x, y, w, h);
+    }
+}
+
+void plugin_status_draw_circle(int x, int y, int radius, uint32_t color) {
+    pax_buf_t* buf = display_get_buffer();
+    if (buf) {
+        pax_draw_circle(buf, color, x, y, radius);
+    }
+}
+
+int plugin_status_get_draw_x(void) {
+    return status_widget_draw_x;
+}
+
+int plugin_status_get_draw_y(void) {
+    return status_widget_draw_y;
+}
+
+// Called by render_base_screen_statusbar to get plugin widgets
+// Returns number of widgets populated
+size_t plugin_api_get_status_widgets(plugin_icontext_t* out, size_t max, int start_x, int start_y) {
+    status_widget_draw_x = start_x;
+    status_widget_draw_y = start_y;
+
+    size_t count = 0;
+    for (int i = 0; i < MAX_STATUS_WIDGETS && count < max; i++) {
+        if (status_widgets[i].active && status_widgets[i].callback) {
+            out[count] = status_widgets[i].callback(status_widgets[i].user_data);
+            count++;
+            // Advance X position for next widget (32px icon width + padding)
+            status_widget_draw_x += 36;
+        }
+    }
+    return count;
+}
+
+// ============================================
+// Input API Implementation
+// ============================================
+
+bool plugin_input_poll(plugin_input_event_t* event, uint32_t timeout_ms) {
+    QueueHandle_t input_queue = NULL;
+    if (bsp_input_get_queue(&input_queue) != ESP_OK || input_queue == NULL) {
+        return false;
+    }
+
+    bsp_input_event_t bsp_event;
+    if (xQueueReceive(input_queue, &bsp_event, pdMS_TO_TICKS(timeout_ms)) == pdTRUE) {
+        event->type = bsp_event.type;
+        if (bsp_event.type == INPUT_EVENT_TYPE_NAVIGATION) {
+            event->key = bsp_event.args_navigation.key;
+            event->state = bsp_event.args_navigation.state;
+            event->modifiers = 0;
+        } else if (bsp_event.type == INPUT_EVENT_TYPE_KEYBOARD) {
+            // Keyboard events provide ASCII character, not key code
+            event->key = (uint32_t)bsp_event.args_keyboard.ascii;
+            event->state = true;  // Keyboard events are character inputs
+            event->modifiers = bsp_event.args_keyboard.modifiers;
+        }
+        return true;
+    }
+    return false;
+}
+
+bool plugin_input_get_key_state(uint32_t key) {
+    // TODO: Implement direct key state query
+    return false;
+}
+
+// ============================================
+// Storage API Implementation (Sandboxed)
+// ============================================
+
+// Build sandboxed path - ensures all paths are within plugin directory
+static bool build_sandboxed_path(plugin_context_t* ctx, const char* path, char* out, size_t out_len) {
+    if (!ctx || !ctx->storage_base_path || !path || !out) {
+        return false;
+    }
+
+    // Reject absolute paths and parent directory traversal
+    if (path[0] == '/' || strstr(path, "..") != NULL) {
+        ESP_LOGW(TAG, "Rejected unsafe path: %s", path);
+        return false;
+    }
+
+    int written = snprintf(out, out_len, "%s/%s", ctx->storage_base_path, path);
+    return written > 0 && (size_t)written < out_len;
+}
+
+plugin_file_t plugin_storage_open(plugin_context_t* ctx, const char* path, const char* mode) {
+    char full_path[256];
+    if (!build_sandboxed_path(ctx, path, full_path, sizeof(full_path))) {
+        return NULL;
+    }
+
+    FILE* f = fastopen(full_path, mode);
+    if (!f) {
+        ESP_LOGD(TAG, "Failed to open %s: %s", full_path, strerror(errno));
+    }
+    return (plugin_file_t)f;
+}
+
+size_t plugin_storage_read(plugin_file_t file, void* buf, size_t size) {
+    if (!file) return 0;
+    return fread(buf, 1, size, (FILE*)file);
+}
+
+size_t plugin_storage_write(plugin_file_t file, const void* buf, size_t size) {
+    if (!file) return 0;
+    return fwrite(buf, 1, size, (FILE*)file);
+}
+
+int plugin_storage_seek(plugin_file_t file, long offset, int whence) {
+    if (!file) return -1;
+    return fseek((FILE*)file, offset, whence);
+}
+
+long plugin_storage_tell(plugin_file_t file) {
+    if (!file) return -1;
+    return ftell((FILE*)file);
+}
+
+void plugin_storage_close(plugin_file_t file) {
+    if (file) {
+        fclose((FILE*)file);
+    }
+}
+
+bool plugin_storage_exists(plugin_context_t* ctx, const char* path) {
+    char full_path[256];
+    if (!build_sandboxed_path(ctx, path, full_path, sizeof(full_path))) {
+        return false;
+    }
+
+    struct stat st;
+    return stat(full_path, &st) == 0;
+}
+
+bool plugin_storage_mkdir(plugin_context_t* ctx, const char* path) {
+    char full_path[256];
+    if (!build_sandboxed_path(ctx, path, full_path, sizeof(full_path))) {
+        return false;
+    }
+
+    return mkdir(full_path, 0755) == 0;
+}
+
+bool plugin_storage_remove(plugin_context_t* ctx, const char* path) {
+    char full_path[256];
+    if (!build_sandboxed_path(ctx, path, full_path, sizeof(full_path))) {
+        return false;
+    }
+
+    return remove(full_path) == 0;
+}
+
+// ============================================
+// Memory API Implementation
+// ============================================
+
+void* plugin_malloc(size_t size) {
+    return heap_caps_malloc(size, MALLOC_CAP_DEFAULT);
+}
+
+void* plugin_calloc(size_t nmemb, size_t size) {
+    return heap_caps_calloc(nmemb, size, MALLOC_CAP_DEFAULT);
+}
+
+void* plugin_realloc(void* ptr, size_t size) {
+    return heap_caps_realloc(ptr, size, MALLOC_CAP_DEFAULT);
+}
+
+void plugin_free(void* ptr) {
+    heap_caps_free(ptr);
+}
+
+// ============================================
+// Timer/Delay API Implementation
+// ============================================
+
+void plugin_delay_ms(uint32_t ms) {
+    vTaskDelay(pdMS_TO_TICKS(ms));
+}
+
+uint32_t plugin_get_tick_ms(void) {
+    return (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS);
+}
+
+// ============================================
+// Menu API Implementation
+// ============================================
+
+// TODO: Implement menu item registration
+// This requires integration with the GUI menu system
+
+int plugin_menu_add_item(const char* label, pax_buf_t* icon,
+                         plugin_menu_callback_t callback, void* arg) {
+    ESP_LOGW(TAG, "plugin_menu_add_item not yet implemented");
+    return -1;
+}
+
+void plugin_menu_remove_item(int item_id) {
+    ESP_LOGW(TAG, "plugin_menu_remove_item not yet implemented");
+}
+
+// ============================================
+// Event API Implementation
+// ============================================
+
+#define MAX_EVENT_HANDLERS 16
+
+typedef struct {
+    bool active;
+    uint32_t event_mask;
+    plugin_event_handler_t handler;
+    void* arg;
+} event_handler_entry_t;
+
+static event_handler_entry_t event_handlers[MAX_EVENT_HANDLERS] = {0};
+
+int plugin_event_register(uint32_t event_mask, plugin_event_handler_t handler, void* arg) {
+    for (int i = 0; i < MAX_EVENT_HANDLERS; i++) {
+        if (!event_handlers[i].active) {
+            event_handlers[i].active = true;
+            event_handlers[i].event_mask = event_mask;
+            event_handlers[i].handler = handler;
+            event_handlers[i].arg = arg;
+            ESP_LOGI(TAG, "Registered event handler %d for mask 0x%lx", i, (unsigned long)event_mask);
+            return i;
+        }
+    }
+    ESP_LOGW(TAG, "No free event handler slots");
+    return -1;
+}
+
+void plugin_event_unregister(int handler_id) {
+    if (handler_id >= 0 && handler_id < MAX_EVENT_HANDLERS) {
+        event_handlers[handler_id].active = false;
+        event_handlers[handler_id].handler = NULL;
+        ESP_LOGI(TAG, "Unregistered event handler %d", handler_id);
+    }
+}
+
+// Called by plugin manager to dispatch events to registered handlers
+int plugin_api_dispatch_event(uint32_t event_type, void* event_data) {
+    int handled = 0;
+    for (int i = 0; i < MAX_EVENT_HANDLERS; i++) {
+        if (event_handlers[i].active &&
+            (event_handlers[i].event_mask & event_type) &&
+            event_handlers[i].handler) {
+            int result = event_handlers[i].handler(event_type, event_data, event_handlers[i].arg);
+            if (result > 0) handled++;
+        }
+    }
+    return handled;
+}
+
+// ============================================
+// Network API Implementation
+// ============================================
+
+bool plugin_net_is_connected(void) {
+    // TODO: Check actual WiFi connection status
+    // For now, just return if wifi manager says connected
+    extern bool wifi_connection_is_connected(void);
+    return wifi_connection_is_connected();
+}
+
+int plugin_http_get(const char* url, char* response, size_t max_len) {
+    esp_http_client_config_t config = {
+        .url = url,
+        .timeout_ms = 10000,
+    };
+
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+    if (!client) {
+        return -1;
+    }
+
+    esp_err_t err = esp_http_client_open(client, 0);
+    if (err != ESP_OK) {
+        esp_http_client_cleanup(client);
+        return -1;
+    }
+
+    int content_length = esp_http_client_fetch_headers(client);
+    int status_code = esp_http_client_get_status_code(client);
+
+    if (response && max_len > 0 && content_length > 0) {
+        size_t read_len = (size_t)content_length < max_len - 1 ? (size_t)content_length : max_len - 1;
+        int actual = esp_http_client_read(client, response, read_len);
+        if (actual >= 0) {
+            response[actual] = '\0';
+        }
+    }
+
+    esp_http_client_close(client);
+    esp_http_client_cleanup(client);
+
+    return status_code;
+}
+
+int plugin_http_post(const char* url, const char* body, char* response, size_t max_len) {
+    esp_http_client_config_t config = {
+        .url = url,
+        .method = HTTP_METHOD_POST,
+        .timeout_ms = 10000,
+    };
+
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+    if (!client) {
+        return -1;
+    }
+
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+
+    int body_len = body ? strlen(body) : 0;
+    esp_err_t err = esp_http_client_open(client, body_len);
+    if (err != ESP_OK) {
+        esp_http_client_cleanup(client);
+        return -1;
+    }
+
+    if (body && body_len > 0) {
+        esp_http_client_write(client, body, body_len);
+    }
+
+    int content_length = esp_http_client_fetch_headers(client);
+    int status_code = esp_http_client_get_status_code(client);
+
+    if (response && max_len > 0 && content_length > 0) {
+        size_t read_len = (size_t)content_length < max_len - 1 ? (size_t)content_length : max_len - 1;
+        int actual = esp_http_client_read(client, response, read_len);
+        if (actual >= 0) {
+            response[actual] = '\0';
+        }
+    }
+
+    esp_http_client_close(client);
+    esp_http_client_cleanup(client);
+
+    return status_code;
+}
+
+// ============================================
+// Settings API Implementation
+// ============================================
+
+bool plugin_settings_get_string(plugin_context_t* ctx, const char* key,
+                                 char* value, size_t max_len) {
+    if (!ctx || !ctx->settings_namespace || !key || !value) {
+        return false;
+    }
+
+    nvs_handle_t handle;
+    esp_err_t err = nvs_open(ctx->settings_namespace, NVS_READONLY, &handle);
+    if (err != ESP_OK) {
+        return false;
+    }
+
+    err = nvs_get_str(handle, key, value, &max_len);
+    nvs_close(handle);
+
+    return err == ESP_OK;
+}
+
+bool plugin_settings_set_string(plugin_context_t* ctx, const char* key,
+                                 const char* value) {
+    if (!ctx || !ctx->settings_namespace || !key || !value) {
+        return false;
+    }
+
+    nvs_handle_t handle;
+    esp_err_t err = nvs_open(ctx->settings_namespace, NVS_READWRITE, &handle);
+    if (err != ESP_OK) {
+        return false;
+    }
+
+    err = nvs_set_str(handle, key, value);
+    if (err == ESP_OK) {
+        err = nvs_commit(handle);
+    }
+    nvs_close(handle);
+
+    return err == ESP_OK;
+}
+
+bool plugin_settings_get_int(plugin_context_t* ctx, const char* key, int32_t* value) {
+    if (!ctx || !ctx->settings_namespace || !key || !value) {
+        return false;
+    }
+
+    nvs_handle_t handle;
+    esp_err_t err = nvs_open(ctx->settings_namespace, NVS_READONLY, &handle);
+    if (err != ESP_OK) {
+        return false;
+    }
+
+    err = nvs_get_i32(handle, key, value);
+    nvs_close(handle);
+
+    return err == ESP_OK;
+}
+
+bool plugin_settings_set_int(plugin_context_t* ctx, const char* key, int32_t value) {
+    if (!ctx || !ctx->settings_namespace || !key) {
+        return false;
+    }
+
+    nvs_handle_t handle;
+    esp_err_t err = nvs_open(ctx->settings_namespace, NVS_READWRITE, &handle);
+    if (err != ESP_OK) {
+        return false;
+    }
+
+    err = nvs_set_i32(handle, key, value);
+    if (err == ESP_OK) {
+        err = nvs_commit(handle);
+    }
+    nvs_close(handle);
+
+    return err == ESP_OK;
+}

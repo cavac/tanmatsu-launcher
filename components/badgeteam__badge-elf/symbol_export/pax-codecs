@@ -1,0 +1,18 @@
+# Exported symbol table:
+# Use `application_symbol = launcher_symbol` for renaming,
+# Or use `common_symbol` for exporting with the same name.
+# Be aware that C++ symbols need to be mangled before adding to this file.
+
+
+# "pax_codecs.h"
+pax_info_png_fd
+pax_info_png_buf
+
+pax_encode_png_fd
+pax_encode_png_buf
+
+pax_decode_png_fd
+pax_decode_png_buf
+
+pax_insert_png_fd
+pax_insert_png_buf

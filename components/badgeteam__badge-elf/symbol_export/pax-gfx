@@ -1,0 +1,199 @@
+# Exported symbol table:
+# Use `application_symbol = launcher_symbol` for renaming,
+# Or use `common_symbol` for exporting with the same name.
+# Be aware that C++ symbols need to be mangled before adding to this file.
+
+
+# "helpers/pax_precalculated.h"
+pax_precalc_circle_8
+pax_precalc_uv_circle_8
+pax_precalc_circle_16
+pax_precalc_uv_circle_16
+pax_precalc_circle_24
+pax_precalc_uv_circle_24
+pax_precalc_circle_32
+pax_precalc_uv_circle_32
+
+# "shapes/pax_arcs.h"
+pax_simple_arc
+pax_draw_arc
+pax_draw_hollow_arc
+pax_draw_round_hollow_arc
+pax_outline_arc
+pax_outline_hollow_arc
+pax_outline_round_hollow_arc
+pax_vectorise_arc
+pax_shade_arc
+pax_shade_outline_arc
+
+# "shapes/pax_circles.h"
+pax_simple_circle
+pax_draw_circle
+pax_draw_hollow_circle
+pax_outline_circle
+pax_outline_hollow_circle
+pax_shade_circle
+pax_shade_outline_circle
+pax_vectorise_circle
+
+# "shapes/pax_lines.h"
+pax_simple_line
+pax_draw_line
+pax_draw_thick_line
+pax_shade_line
+
+# "shapes/pax_misc.h"
+pax_merge_pixel
+pax_set_pixel
+pax_get_pixel
+pax_set_pixel_raw
+pax_get_pixel_raw
+pax_draw_sprite
+pax_draw_sprite_rot
+pax_draw_sprite_sized
+pax_draw_sprite_rot_sized
+pax_blit
+pax_blit_rot
+pax_blit_sized
+pax_blit_rot_sized
+pax_blit_raw
+pax_blit_raw_rot
+pax_blit_raw_sized
+pax_blit_raw_rot_sized
+pax_draw_image
+pax_draw_image_sized
+pax_draw_image_op
+pax_draw_image_sized_op
+pax_background
+pax_buf_scroll
+
+# "shapes/pax_rects.h"
+pax_simple_rect
+pax_draw_rect
+pax_draw_round_rect
+pax_draw_round_rect4
+pax_outline_rect
+pax_outline_round_rect
+pax_outline_round_rect4
+pax_shade_rect
+pax_shade_outline_rect
+
+# "shapes/pax_tris.h"
+pax_simple_tri
+pax_draw_tri
+pax_outline_tri
+pax_shade_tri
+pax_shade_outline_tri
+
+# "pax_fonts.h"
+pax_font_sky_raw
+pax_font_sky_mono_raw
+pax_font_marker_raw
+pax_font_saira_condensed_raw
+pax_font_saira_regular_raw
+
+# "pax_gfx.h"
+pax_get_err
+pax_desc_err
+pax_join
+pax_set_render_engine_default
+pax_set_renderer_async
+pax_buf_type_info
+pax_buf_init
+pax_buf_destroy
+pax_buf_set_palette
+pax_buf_set_palette_rom
+pax_buf_get_palette
+pax_buf_reversed
+pax_buf_get_width
+pax_buf_get_height
+pax_buf_get_dims
+pax_buf_get_width_raw
+pax_buf_get_height_raw
+pax_buf_get_dims_raw
+pax_buf_get_type
+pax_buf_get_pixels
+pax_buf_get_pixels_rw
+pax_buf_get_size
+pax_buf_set_orientation
+pax_buf_get_orientation
+pax_clip
+pax_get_clip
+pax_noclip
+pax_is_dirty
+pax_get_dirty
+pax_mark_clean
+pax_mark_dirty0
+pax_mark_dirty1
+pax_mark_dirty2
+pax_col_hsv
+pax_col_ahsv
+pax_col_hsv_alt
+pax_col_ahsv_alt
+pax_undo_ahsv
+pax_undo_hsv
+pax_undo_ahsv_alt
+pax_undo_hsv_alt
+pax_col_lerp
+pax_col_merge
+pax_col_tint
+pax_closest_in_palette
+pax_apply_2d
+pax_push_2d
+pax_pop_2d
+pax_reset_2d
+
+# "pax_matrix.h"
+matrix_2d_rotate
+matrix_2d_multiply
+matrix_2d_transform
+matrix_2d_transform_alt
+pax_recti_abs
+pax_rectf_abs
+pax_recti_intersect
+pax_rectf_intersect
+pax_vec2f_unify
+
+# "pax_orientation.h"
+pax_orient_det_vec2f
+pax_unorient_det_vec2f
+pax_orient_det_rectf
+pax_unorient_det_rectf
+pax_orient_det_vec2i
+pax_unorient_det_vec2i
+pax_orient_det_recti
+pax_unorient_det_recti
+
+# "pax_shaders.h"
+pax_shader_font_bmp_pal
+pax_shader_font_bmp
+pax_shader_font_bmp_aa
+pax_shader_texture
+pax_shader_texture_aa
+
+# "pax_shapes.h"
+pax_vectorise_bezier_part
+pax_vectorise_bezier
+pax_draw_bezier_part
+pax_draw_bezier
+pax_outline_shape_part
+pax_outline_shape
+pax_outline_shape_part_cl
+pax_outline_shape_cl
+pax_transform_shape
+# pax_round_shape_uniform
+# pax_round_shape
+# pax_triang_complete
+# pax_triang_concave
+pax_draw_shape
+pax_draw_shape_triang
+
+# "pax_text.h"
+pax_utf8_getch_l
+pax_utf8_strlen_l
+pax_utf8_seeknext_l
+pax_utf8_seekprev_l
+pax_load_font
+pax_store_font
+pax_draw_text_adv
+pax_text_size_adv

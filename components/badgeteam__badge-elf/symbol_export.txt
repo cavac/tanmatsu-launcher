@@ -1,0 +1,915 @@
+# Exported symbol table:
+# Use `application_symbol = launcher_symbol` for renaming,
+# Or use `common_symbol` for exporting with the same name.
+# Be aware that C++ symbols need to be mangled before adding to this file.
+
+
+# ---- LibGCC ---- #
+
+# LibGCC int
+__addvsi3
+__negvdi2
+__bswapsi2
+__cmpdi2
+__udivmoddi4
+__absvdi2
+__ctzsi2
+__ctzdi2
+__ffsdi2
+__paritysi2
+__subvsi3
+__umodsi3
+__popcountsi2
+__addvdi3
+__muldi3
+__ashrdi3
+__divdi3
+__modsi3
+__ashldi3
+__divsi3
+__moddi3
+__ucmpdi2
+__mulvsi3
+__subvdi3
+__lshrdi3
+__negdi2
+__bswapdi2
+__absvsi2
+__mulsi3
+__clzsi2
+__mulvdi3
+__negvsi2
+__clzdi2
+__udivsi3
+__paritydi2
+__umoddi3
+__udivdi3
+__popcountdi2
+
+# LibGCC float
+__gedf2
+__addtf3
+__getf2
+__powisf2
+__multc3
+__fixdfdi
+__multf3
+__divdc3
+__floatsitf
+__floatundidf
+__trunctfdf2
+__unordtf2
+__nedf2
+__powitf2
+__adddf3
+__negdf2
+__powidf2
+__netf2
+__floatditf
+__floatsidf
+__fixunsdfdi
+__muldc3
+__muldf3
+__gttf2
+__floatdisf
+__ltdf2
+__fixtfsi
+__fixunsdfsi
+__divsf3
+__lttf2
+__eqtf2
+__trunctfsf2
+__divdf3
+__negtf2
+__eqdf2
+__divtf3
+__unorddf2
+__mulsc3
+__truncdfsf2
+__extendsfdf2
+__subtf3
+__fixunssfsi
+__fixunstfdi
+__fixsfdi
+__ledf2
+__fixunssfdi
+__extendsftf2
+__extenddftf2
+__floatunsidf
+__floatunsitf
+__floatundisf
+__fixtfdi
+__floatdidf
+__floatunditf
+__divsc3
+__divtc3
+__fixdfsi
+__fixunstfsi
+__letf2
+__subdf3
+__gtdf2
+
+
+# ---- BadgeELF API ---- #
+
+# "asp/audio.h"
+asp_audio_set_rate
+asp_audio_get_volume
+asp_audio_set_volume
+asp_audio_set_amplifier
+asp_audio_stop
+asp_audio_start
+asp_audio_write
+
+# "asp/device.h"
+asp_device_get_name
+asp_device_get_manufacturer
+
+# "asp/display.h"
+asp_disp_get_params
+asp_disp_get_fb
+asp_disp_get_pax_buf
+asp_disp_init_pax_buf
+asp_disp_write
+asp_disp_write_pax
+asp_disp_write_part
+asp_disp_write_part_pax
+
+# "asp/err.h"
+asp_err_id
+asp_err_desc
+
+# "asp/input.h"
+asp_input_poll
+asp_input_get_nav
+asp_input_get_action
+asp_input_needs_on_screen_keyboard
+asp_input_set_backlight
+asp_input_get_backlight
+
+
+# ---- POSIX ---- #
+
+# "math.h"
+atan
+cos
+sin
+tan
+tanh
+frexp
+modf
+ceil
+fabs
+floor
+acos
+asin
+atan2
+cosh
+sinh
+exp
+ldexp
+log
+log10
+pow
+sqrt
+fmod
+finite
+finitef
+finitel
+isinff
+isnanf
+isinf
+isnan
+__isinff
+__isinfd
+__isnanf
+__isnand
+__fpclassifyf
+__fpclassifyd
+__signbitf
+__signbitd
+infinity
+nan
+copysign
+logb
+ilogb
+asinh
+cbrt
+nextafter
+rint
+scalbn
+exp2
+scalbln
+tgamma
+nearbyint
+lrint
+llrint
+round
+lround
+llround
+trunc
+remquo
+fdim
+fmax
+fmin
+fma
+log1p
+expm1
+acosh
+atanh
+remainder
+gamma
+lgamma
+erf
+erfc
+log2
+hypot
+atanf
+cosf
+sinf
+tanf
+tanhf
+frexpf
+modff
+ceilf
+fabsf
+floorf
+acosf
+asinf
+atan2f
+coshf
+sinhf
+expf
+ldexpf
+logf
+log10f
+powf
+sqrtf
+fmodf
+exp2f
+scalblnf
+tgammaf
+nearbyintf
+lrintf
+llrintf
+roundf
+lroundf
+llroundf
+truncf
+remquof
+fdimf
+fmaxf
+fminf
+fmaf
+infinityf
+nanf
+copysignf
+logbf
+ilogbf
+asinhf
+cbrtf
+nextafterf
+rintf
+scalbnf
+log1pf
+expm1f
+acoshf
+atanhf
+remainderf
+gammaf
+lgammaf
+erff
+erfcf
+log2f
+hypotf
+atanl
+cosl
+sinl
+tanl
+tanhl
+frexpl
+modfl
+ceill
+fabsl
+floorl
+log1pl
+expm1l
+acosl
+asinl
+atan2l
+coshl
+sinhl
+expl
+ldexpl
+logl
+log10l
+sqrtl
+fmodl
+copysignl
+nanl
+ilogbl
+asinhl
+cbrtl
+nextafterl
+nexttowardf
+nexttoward
+nexttowardl
+logbl
+log2l
+rintl
+scalbnl
+exp2l
+scalblnl
+tgammal
+nearbyintl
+lrintl
+llrintl
+roundl
+lroundl
+llroundl
+truncl
+remquol
+fdiml
+fmaxl
+fminl
+fmal
+acoshl
+atanhl
+remainderl
+lgammal
+erfl
+erfcl
+hypotl
+drem
+dremf
+gamma_r
+lgamma_r
+gammaf_r
+lgammaf_r
+y0
+y1
+yn
+j0
+j1
+jn
+y0f
+y1f
+ynf
+j0f
+j1f
+jnf
+sincos
+sincosf
+exp10
+pow10
+exp10f
+pow10f
+__signgam
+
+# "sched.h"
+sched_yield
+sched_get_priority_min
+sched_get_priority_max
+
+# "pthread.h"
+pthread_mutexattr_init
+pthread_mutexattr_destroy
+# pthread_mutexattr_getpshared
+# pthread_mutexattr_setpshared
+pthread_mutexattr_gettype
+pthread_mutexattr_settype
+
+pthread_mutex_init
+pthread_mutex_destroy
+pthread_mutex_lock
+pthread_mutex_trylock
+pthread_mutex_unlock
+pthread_mutex_timedlock
+# pthread_mutex_clocklock
+
+pthread_condattr_init
+pthread_condattr_destroy
+pthread_condattr_getclock
+pthread_condattr_setclock
+pthread_condattr_getpshared
+pthread_condattr_setpshared
+pthread_cond_init
+pthread_cond_destroy
+pthread_cond_signal
+pthread_cond_broadcast
+pthread_cond_wait
+pthread_cond_timedwait
+# pthread_cond_clockwait
+
+# pthread_attr_getscope
+# pthread_attr_setscope
+# pthread_attr_getinheritsched
+# pthread_attr_setinheritsched
+# pthread_attr_getschedpolicy
+# pthread_attr_setschedpolicy
+# pthread_attr_getschedparam
+# pthread_attr_setschedparam
+pthread_attr_init
+pthread_attr_destroy
+# pthread_attr_getstack
+# pthread_attr_setstack
+pthread_attr_getstacksize
+pthread_attr_setstacksize
+# pthread_attr_getstackaddr
+# pthread_attr_setstackaddr
+pthread_attr_getdetachstate
+pthread_attr_setdetachstate
+# pthread_attr_getguardsize
+# pthread_attr_setguardsize
+
+pthread_getschedparam
+pthread_setschedparam
+# pthread_getname_np
+# pthread_setname_np
+
+pthread_create
+pthread_join
+pthread_detach
+pthread_exit
+pthread_self
+pthread_equal
+# pthread_getcpuclockid
+# pthread_getconcurrency
+# pthread_setconcurrency
+# pthread_yield
+
+pthread_once
+pthread_key_create
+pthread_key_delete
+pthread_getspecific
+pthread_setspecific
+pthread_cancel
+pthread_setcancelstate
+# pthread_setcanceltype
+# pthread_testcancel
+# _pthread_cleanup_push
+# _pthread_cleanup_push_defer
+# _pthread_cleanup_pop
+# _pthread_cleanup_pop_restore
+
+# pthread_rwlockattr_init
+# pthread_rwlockattr_destroy
+# pthread_rwlockattr_getpshared
+# pthread_rwlockattr_setpshared
+pthread_rwlock_rdlock
+pthread_rwlock_tryrdlock
+# pthread_rwlock_timedrdlock
+pthread_rwlock_unlock
+pthread_rwlock_wrlock
+pthread_rwlock_trywrlock
+# pthread_rwlock_timedwrlock
+# pthread_rwlock_clockrdlock
+# pthread_rwlock_clockwrlock
+
+
+# ---- PAX graphics core ---- #
+
+# "helpers/pax_precalculated.h"
+pax_precalc_circle_8
+pax_precalc_uv_circle_8
+pax_precalc_circle_16
+pax_precalc_uv_circle_16
+pax_precalc_circle_24
+pax_precalc_uv_circle_24
+pax_precalc_circle_32
+pax_precalc_uv_circle_32
+
+# "pax_fonts.h"
+# pax_font_sky_raw
+# pax_font_sky_mono_raw
+# pax_font_marker_raw
+# pax_font_saira_condensed_raw
+# pax_font_saira_regular_raw
+PRIVATE_pax_font_sky
+PRIVATE_pax_font_sky_mono
+PRIVATE_pax_font_marker
+PRIVATE_pax_font_saira_condensed
+PRIVATE_pax_font_saira_regular
+
+# "pax_gfx.h"
+# pax_get_err
+# pax_desc_err
+pax_join
+# pax_enable_multicore
+# pax_disable_multicore
+# pax_buf_type_info
+pax_buf_init
+# pax_buf_set_palette
+# pax_buf_set_palette_rom
+# pax_buf_get_palette
+pax_buf_reversed
+pax_buf_destroy
+pax_buf_get_width
+pax_buf_get_height
+pax_buf_get_widthf
+pax_buf_get_heightf
+# pax_buf_get_dims
+# pax_buf_get_width_raw
+# pax_buf_get_height_raw
+# pax_buf_get_dims_raw
+pax_buf_get_type
+pax_buf_get_pixels
+pax_buf_get_pixels_rw
+pax_buf_get_size
+pax_buf_set_orientation
+pax_buf_get_orientation
+pax_buf_scroll
+pax_clip
+pax_get_clip
+pax_noclip
+pax_is_dirty
+pax_get_dirty
+pax_mark_clean
+pax_mark_dirty0
+pax_mark_dirty1
+pax_mark_dirty2
+pax_col_hsv
+pax_col_ahsv
+pax_col_hsv_alt
+pax_col_ahsv_alt
+pax_undo_ahsv
+pax_undo_hsv
+pax_undo_ahsv_alt
+pax_undo_hsv_alt
+pax_col_lerp
+pax_col_merge
+pax_col_tint
+pax_apply_2d
+pax_push_2d
+pax_pop_2d
+pax_reset_2d
+pax_merge_pixel
+pax_set_pixel
+pax_get_pixel
+pax_set_pixel_raw
+pax_get_pixel_raw
+pax_shade_rect
+pax_shade_line
+pax_shade_tri
+pax_shade_arc
+pax_shade_circle
+pax_draw_image
+pax_draw_image_sized
+pax_draw_image_op
+pax_draw_image_sized_op
+pax_draw_rect
+pax_draw_line
+pax_draw_tri
+pax_draw_arc
+pax_draw_circle
+pax_background
+pax_simple_rect
+pax_simple_line
+pax_simple_tri
+pax_simple_arc
+pax_simple_circle
+
+# "pax_matrix.h"
+matrix_2d_rotate
+matrix_2d_multiply
+matrix_2d_transform
+# matrix_2d_transform_alt
+# pax_recti_abs
+# pax_rectf_abs
+# pax_recti_intersect
+# pax_rectf_intersect
+# vec1_unify
+
+# "pax_orientation.h"
+# pax_orient_det_vec2f
+# pax_unorient_det_vec2f
+# pax_orient_det_rectf
+# pax_unorient_det_rectf
+# pax_orient_det_vec2i
+# pax_unorient_det_vec2i
+# pax_orient_det_recti
+# pax_unorient_det_recti
+
+# "pax_shaders.h"
+pax_shader_font_bmp_hi_pal
+pax_shader_font_bmp_hi
+pax_shader_font_bmp_hi_aa
+pax_shader_font_bmp_pal
+pax_shader_font_bmp
+pax_shader_font_bmp_aa
+pax_shader_texture
+pax_shader_texture_aa
+
+# "pax_shapes.h"
+pax_vectorise_bezier_part
+pax_vectorise_bezier
+pax_draw_bezier_part
+pax_draw_bezier
+pax_vectorise_arc
+pax_vectorise_circle
+pax_draw_round_rect
+# pax_draw_round_rect4
+pax_draw_hollow_circle
+pax_draw_hollow_arc
+pax_draw_round_hollow_arc
+pax_outline_round_rect
+# pax_outline_round_rect4
+pax_outline_hollow_circle
+pax_outline_hollow_arc
+pax_outline_round_hollow_arc
+pax_outline_rect
+pax_outline_tri
+pax_outline_arc
+pax_outline_circle
+pax_shade_outline_rect
+pax_shade_outline_tri
+pax_shade_outline_arc
+pax_shade_outline_circle
+pax_outline_shape_part
+pax_outline_shape
+pax_outline_shape_part_cl
+pax_outline_shape_cl
+pax_transform_shape
+pax_round_shape_uniform
+pax_round_shape
+pax_triang_complete
+pax_triang_concave
+pax_draw_shape
+pax_draw_shape_triang
+
+# "pax_text.h"
+# pax_utf8_getch_l
+# pax_utf8_strlen_l
+# pax_utf8_seeknext_l
+# pax_utf8_seekprev_l
+pax_load_font
+pax_store_font
+# pax_draw_text_adv
+# pax_text_size_adv
+pax_draw_text
+pax_text_size
+
+
+# ---- C standard library ---- #
+
+# <sys/errno.h>
+__errno
+
+# <sys/fcntl.h>
+open
+creat
+fcntl
+
+# <sys/unistd.h>
+usleep
+rmdir
+unlink
+
+# <sys/stat.h>
+mkdir
+fstat
+stat
+
+# <string.h>
+memchr
+memcmp
+memcpy
+memmove
+memset
+strcat
+strchr
+strcmp
+strcoll
+strcpy
+strcspn
+strerror
+strlen
+strncat
+strncmp
+strncpy
+strpbrk
+strrchr
+strspn
+strstr
+strtok
+strxfrm
+strcoll_l
+strerror_l
+strxfrm_l
+strtok_r
+timingsafe_bcmp
+timingsafe_memcmp
+memccpy
+mempcpy
+memmem
+memrchr
+rawmemchr
+stpcpy
+stpncpy
+strcasestr
+strchrnul
+strdup
+strndup
+strlcat
+strlcpy
+strnlen
+strsep
+strnstr
+strlwr
+strupr
+strsignal
+strverscmp
+
+# <malloc.h>
+malloc
+free
+realloc
+calloc
+memalign
+mallinfo
+malloc_stats
+mallopt
+malloc_usable_size
+
+# <reent.h>
+__sinit
+__sglue
+_global_impure_ptr
+__getreent
+__atexit
+__atexit0
+_reclaim_reent
+_fwalk_sglue
+
+# <stdio.h>
+tmpfile
+tmpnam
+tempnam
+fclose
+fflush
+freopen
+setbuf
+setvbuf
+fprintf
+fscanf
+printf
+scanf
+sscanf
+vfprintf
+vprintf
+vsprintf
+fgetc
+fgets
+fputc
+fputs
+getc
+getchar
+gets
+putc
+putchar
+puts
+ungetc
+fread
+fwrite
+fgetpos
+fseek
+fsetpos
+ftell
+rewind
+clearerr
+feof
+ferror
+perror
+fopen
+sprintf
+remove
+rename
+fseeko
+ftello
+fcloseall
+snprintf
+vsnprintf
+vfscanf
+vscanf
+vsscanf
+asprintf
+vasprintf
+fdopen
+fileno
+setbuffer
+setlinebuf
+getw
+putw
+getc_unlocked
+getchar_unlocked
+putc_unlocked
+putchar_unlocked
+dprintf
+fmemopen
+open_memstream
+vdprintf
+_asiprintf_r
+_asniprintf_r
+_asnprintf_r
+_asprintf_r
+_diprintf_r
+_dprintf_r
+_fclose_r
+_fcloseall_r
+_fdopen_r
+_fflush_r
+_fgetc_r
+_fgetc_unlocked_r
+_fgets_r
+_fgets_unlocked_r
+_fgetpos_r
+_fsetpos_r
+_fiprintf_r
+_fiscanf_r
+_fmemopen_r
+_fopen_r
+_freopen_r
+_fprintf_r
+_fpurge_r
+_fputc_r
+_fputc_unlocked_r
+_fputs_r
+_fputs_unlocked_r
+_fread_r
+_fread_unlocked_r
+_fscanf_r
+_fseek_r
+_fseeko_r
+_ftell_r
+_ftello_r
+_rewind_r
+_fwrite_r
+_fwrite_unlocked_r
+_getc_r
+_getc_unlocked_r
+_getchar_r
+_getchar_unlocked_r
+_gets_r
+_iprintf_r
+_iscanf_r
+_open_memstream_r
+_perror_r
+_printf_r
+_putc_r
+_putc_unlocked_r
+_putchar_unlocked_r
+_putchar_r
+_puts_r
+_remove_r
+_rename_r
+_scanf_r
+_siprintf_r
+_siscanf_r
+_sniprintf_r
+_snprintf_r
+_sprintf_r
+_sscanf_r
+_tempnam_r
+_tmpfile_r
+_tmpnam_r
+_ungetc_r
+_vasiprintf_r
+_vasniprintf_r
+_vasnprintf_r
+_vasprintf_r
+_vdiprintf_r
+_vdprintf_r
+_vfiprintf_r
+_vfiscanf_r
+_vfprintf_r
+_vfscanf_r
+_viprintf_r
+_viscanf_r
+_vprintf_r
+_vscanf_r
+_vsiprintf_r
+_vsiscanf_r
+_vsniprintf_r
+_vsnprintf_r
+_vsprintf_r
+_vsscanf_r
+fpurge
+__getdelim
+__getline
+clearerr_unlocked
+feof_unlocked
+ferror_unlocked
+fileno_unlocked
+fflush_unlocked
+fgetc_unlocked
+fputc_unlocked
+fread_unlocked
+fwrite_unlocked
+fgets_unlocked
+fputs_unlocked
+__srget_r
+__swbuf_r
+funopen
+_funopen_r
+fopencookie
+_fopencookie_r

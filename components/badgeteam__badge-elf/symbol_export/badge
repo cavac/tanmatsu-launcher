@@ -1,0 +1,40 @@
+# Exported symbol table:
+# Use `application_symbol = launcher_symbol` for renaming,
+# Or use `common_symbol` for exporting with the same name.
+# Be aware that C++ symbols need to be mangled before adding to this file.
+
+
+# "asp/audio.h"
+asp_audio_set_rate
+asp_audio_get_volume
+asp_audio_set_volume
+asp_audio_set_amplifier
+asp_audio_stop
+asp_audio_start
+asp_audio_write
+
+# "asp/device.h"
+asp_device_get_name
+asp_device_get_manufacturer
+
+# "asp/display.h"
+asp_disp_get_params
+asp_disp_get_fb
+asp_disp_get_pax_buf
+asp_disp_init_pax_buf
+asp_disp_write
+asp_disp_write_pax
+asp_disp_write_part
+asp_disp_write_part_pax
+
+# "asp/err.h"
+asp_err_id
+asp_err_desc
+
+# "asp/input.h"
+asp_input_poll
+asp_input_get_nav
+asp_input_get_action
+asp_input_needs_on_screen_keyboard
+asp_input_set_backlight
+asp_input_get_backlight

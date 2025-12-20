@@ -1,0 +1,9 @@
+dependencies:
+  badgeteam/badge-elf-api: 0.2.0
+repository: git://github.com/badgeteam/esp32-component-badge-elf.git
+repository_info:
+  commit_sha: 7ca843d52b113780eb61857b8d32d77564bd26c5
+  path: .
+targets:
+- esp32p4
+version: 0.2.0
