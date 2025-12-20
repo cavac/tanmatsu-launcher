@@ -171,8 +171,10 @@ int plugin_api_render_status_widgets(pax_buf_t* buffer, int x_right, int y, int 
 
     for (int i = 0; i < MAX_STATUS_WIDGETS; i++) {
         if (status_widgets[i].active && status_widgets[i].callback) {
+            ESP_LOGI(TAG, "Rendering widget %d at x=%d, y=%d, h=%d", i, current_x, y, height);
             int widget_width = status_widgets[i].callback(buffer, current_x, y, height,
                                                            status_widgets[i].user_data);
+            ESP_LOGI(TAG, "Widget %d returned width=%d", i, widget_width);
             if (widget_width > 0) {
                 current_x -= widget_width;
                 total_width += widget_width;
