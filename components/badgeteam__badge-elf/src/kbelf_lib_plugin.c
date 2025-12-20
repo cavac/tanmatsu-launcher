@@ -88,6 +88,16 @@ extern char const symbol_plugin_settings_set_string[] asm("plugin_settings_set_s
 extern char const symbol_plugin_settings_get_int[] asm("plugin_settings_get_int");
 extern char const symbol_plugin_settings_set_int[] asm("plugin_settings_set_int");
 
+// Power Information API
+extern char const symbol_plugin_power_get_battery_info[] asm("plugin_power_get_battery_info");
+extern char const symbol_plugin_power_get_system_voltage[] asm("plugin_power_get_system_voltage");
+extern char const symbol_plugin_power_get_battery_voltage[] asm("plugin_power_get_battery_voltage");
+extern char const symbol_plugin_power_get_input_voltage[] asm("plugin_power_get_input_voltage");
+extern char const symbol_plugin_power_get_charging_config[] asm("plugin_power_get_charging_config");
+extern char const symbol_plugin_power_set_charging[] asm("plugin_power_set_charging");
+extern char const symbol_plugin_power_get_usb_boost[] asm("plugin_power_get_usb_boost");
+extern char const symbol_plugin_power_set_usb_boost[] asm("plugin_power_set_usb_boost");
+
 // Symbol table
 static kbelf_builtin_sym const symbols[] = {
     // Logging API
@@ -172,6 +182,16 @@ static kbelf_builtin_sym const symbols[] = {
     { .name = "plugin_settings_set_string", .vaddr = (size_t) symbol_plugin_settings_set_string },
     { .name = "plugin_settings_get_int", .vaddr = (size_t) symbol_plugin_settings_get_int },
     { .name = "plugin_settings_set_int", .vaddr = (size_t) symbol_plugin_settings_set_int },
+
+    // Power Information API
+    { .name = "plugin_power_get_battery_info", .vaddr = (size_t) symbol_plugin_power_get_battery_info },
+    { .name = "plugin_power_get_system_voltage", .vaddr = (size_t) symbol_plugin_power_get_system_voltage },
+    { .name = "plugin_power_get_battery_voltage", .vaddr = (size_t) symbol_plugin_power_get_battery_voltage },
+    { .name = "plugin_power_get_input_voltage", .vaddr = (size_t) symbol_plugin_power_get_input_voltage },
+    { .name = "plugin_power_get_charging_config", .vaddr = (size_t) symbol_plugin_power_get_charging_config },
+    { .name = "plugin_power_set_charging", .vaddr = (size_t) symbol_plugin_power_set_charging },
+    { .name = "plugin_power_get_usb_boost", .vaddr = (size_t) symbol_plugin_power_get_usb_boost },
+    { .name = "plugin_power_set_usb_boost", .vaddr = (size_t) symbol_plugin_power_set_usb_boost },
 };
 
 // Library definition

@@ -85,3 +85,13 @@ int plugin_settings_get_string(const char* key, char* value, int max_len) { retu
 int plugin_settings_set_string(const char* key, const char* value) { return 0; }
 int plugin_settings_get_int(const char* key, int* value) { return 0; }
 int plugin_settings_set_int(const char* key, int value) { return 0; }
+
+// Power Information API
+int plugin_power_get_battery_info(void* out_info) { return 0; }
+int plugin_power_get_system_voltage(unsigned short* out_millivolt) { return 0; }
+int plugin_power_get_battery_voltage(unsigned short* out_millivolt) { return 0; }
+int plugin_power_get_input_voltage(unsigned short* out_millivolt) { return 0; }
+int plugin_power_get_charging_config(int* out_disabled, unsigned short* out_current_ma) { return 0; }
+int plugin_power_set_charging(int disable, unsigned short current_ma) { return 0; }
+int plugin_power_get_usb_boost(int* out_enabled) { return 0; }
+int plugin_power_set_usb_boost(int enable) { return 0; }
