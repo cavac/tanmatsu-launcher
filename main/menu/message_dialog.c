@@ -208,7 +208,19 @@ void render_base_screen_statusbar(pax_buf_t* buffer, gui_theme_t* theme, bool ba
         int widget_start_x = 180;
         int widget_start_y = theme->header.vertical_margin;
         plugin_icontext_t plugin_widgets[8];
-        plugin_manager_get_status_widgets(plugin_widgets, 8, widget_start_x, widget_start_y);
+        size_t widget_count = plugin_manager_get_status_widgets(plugin_widgets, 8, widget_start_x, widget_start_y);
+
+        // Draw each plugin widget
+        float current_x = widget_start_x;
+        for (size_t i = 0; i < widget_count; i++) {
+            if (plugin_widgets[i].icon != NULL || plugin_widgets[i].text != NULL) {
+                // Cast plugin_icontext_t to gui_element_icontext_t (same structure)
+                gui_element_icontext_t* widget = (gui_element_icontext_t*)&plugin_widgets[i];
+                float width = gui_icontext_draw(buffer, &theme->header, current_x, widget_start_y,
+                                                widget, 4, theme->header.height);
+                current_x += width + 8;  // Add spacing between widgets
+            }
+        }
     }
 
     // Update status LEDs (manual mode replaces coprocessor automatic mode)

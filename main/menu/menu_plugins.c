@@ -29,12 +29,13 @@ typedef enum {
 static void render_footer(pax_buf_t* buffer, gui_theme_t* theme, bool has_plugins) {
     gui_element_icontext_t footer_left[] = {
         {get_icon(ICON_F1), "Back"},
+        {get_icon(ICON_F2), has_plugins ? "Load" : ""},
     };
     gui_element_icontext_t footer_right[] = {
-        {get_icon(ICON_F2), has_plugins ? "Load/Unload" : ""},
+        {get_icon(ICON_F3), has_plugins ? "Auto[A]" : ""},
     };
     gui_footer_draw(buffer, theme,
-                    footer_left, has_plugins ? 1 : 1,
+                    footer_left, has_plugins ? 2 : 1,
                     footer_right, has_plugins ? 1 : 0);
 }
 
@@ -57,17 +58,25 @@ void menu_plugins(pax_buf_t* buffer, gui_theme_t* theme) {
 
         // Add discovered plugins to menu
         for (size_t i = 0; i < plugin_count; i++) {
-            char label[64];
+            char label[80];
             const char* type_str = "";
             switch (plugins[i].type) {
                 case PLUGIN_TYPE_MENU: type_str = "[Menu]"; break;
-                case PLUGIN_TYPE_SERVICE: type_str = "[Service]"; break;
+                case PLUGIN_TYPE_SERVICE: type_str = "[Svc]"; break;
                 case PLUGIN_TYPE_HOOK: type_str = "[Hook]"; break;
             }
-            snprintf(label, sizeof(label), "%s %s%s",
+
+            // Status indicators:
+            // [*] = loaded, [A] = auto-start enabled
+            const char* loaded_indicator = plugins[i].is_loaded ? "[*] " : "[ ] ";
+            bool autostart = plugin_manager_get_autostart(plugins[i].slug);
+            const char* auto_indicator = autostart ? " [A]" : "";
+
+            snprintf(label, sizeof(label), "%s%s %s%s",
+                     loaded_indicator,
                      plugins[i].name,
                      type_str,
-                     plugins[i].is_loaded ? " *" : "");
+                     auto_indicator);
 
             menu_insert_item_icon(&menu, label, NULL,
                                   (void*)(uintptr_t)i, -1,
@@ -182,6 +191,26 @@ void menu_plugins(pax_buf_t* buffer, gui_theme_t* theme) {
                                                            "Error", "Failed to load plugin", "OK");
                                         }
                                     }
+                                    refresh = true;
+                                }
+                            }
+                            break;
+                        }
+
+                        case BSP_INPUT_NAVIGATION_KEY_F3: {
+                            // Toggle auto-start for selected plugin
+                            ESP_LOGI(TAG, "F3 pressed - toggling autostart");
+                            if (plugin_count > 0) {
+                                size_t idx = (size_t)(uintptr_t)menu_get_callback_args(
+                                    &menu, menu_get_position(&menu));
+
+                                if (idx < plugin_count) {
+                                    plugin_discovery_info_t* plugin = &plugins[idx];
+                                    bool current = plugin_manager_get_autostart(plugin->slug);
+                                    ESP_LOGI(TAG, "Plugin %s: current autostart=%d, setting to %d",
+                                             plugin->slug, current, !current);
+                                    bool success = plugin_manager_set_autostart(plugin->slug, !current);
+                                    ESP_LOGI(TAG, "Set autostart result: %s", success ? "OK" : "FAILED");
                                     refresh = true;
                                 }
                             }

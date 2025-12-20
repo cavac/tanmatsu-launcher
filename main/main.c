@@ -363,6 +363,7 @@ void app_main(void) {
 
     startup_screen("Initializing plugins...");
     plugin_manager_init();
+    plugin_manager_load_autostart();
 
     bsp_power_set_usb_host_boost_enabled(true);
 

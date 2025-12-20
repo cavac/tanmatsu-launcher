@@ -641,44 +641,117 @@ int plugin_manager_dispatch_event(uint32_t event_type, void* event_data) {
 // Autostart Management
 // ============================================
 
+// Generate a short hash key from slug (NVS keys limited to 15 chars)
+static void make_autostart_key(const char* slug, char* out_key, size_t out_len) {
+    // Simple hash to create a short key: "a_" + 8 hex chars from hash
+    uint32_t hash = 5381;
+    for (const char* p = slug; *p; p++) {
+        hash = ((hash << 5) + hash) + (uint8_t)*p;
+    }
+    snprintf(out_key, out_len, "a_%08lx", (unsigned long)hash);
+}
+
 bool plugin_manager_set_autostart(const char* slug, bool enabled) {
     if (slug == NULL) return false;
 
     nvs_handle_t handle;
     esp_err_t err = nvs_open(PLUGIN_NVS_NAMESPACE, NVS_READWRITE, &handle);
     if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to open NVS for autostart: %s", esp_err_to_name(err));
         return false;
     }
 
-    char key[32];
-    snprintf(key, sizeof(key), "auto_%s", slug);
+    char key[16];  // NVS keys max 15 chars + null
+    make_autostart_key(slug, key, sizeof(key));
 
     err = nvs_set_u8(handle, key, enabled ? 1 : 0);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to set autostart key %s: %s", key, esp_err_to_name(err));
+    }
     if (err == ESP_OK) {
         err = nvs_commit(handle);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to commit NVS: %s", esp_err_to_name(err));
+        }
     }
     nvs_close(handle);
 
     return err == ESP_OK;
 }
 
-bool plugin_manager_get_autostart(const char* slug) {
-    if (slug == NULL) return false;
+// Helper to read autostart default from plugin.json
+static bool get_autostart_from_json(const char* plugin_path) {
+    char metadata_path[256];
+    snprintf(metadata_path, sizeof(metadata_path), "%s/plugin.json", plugin_path);
 
-    nvs_handle_t handle;
-    esp_err_t err = nvs_open(PLUGIN_NVS_NAMESPACE, NVS_READONLY, &handle);
-    if (err != ESP_OK) {
+    FILE* fd = fopen(metadata_path, "r");
+    if (fd == NULL) return false;
+
+    fseek(fd, 0, SEEK_END);
+    long size = ftell(fd);
+    fseek(fd, 0, SEEK_SET);
+
+    if (size <= 0 || size > 4096) {
+        fclose(fd);
         return false;
     }
 
-    char key[32];
-    snprintf(key, sizeof(key), "auto_%s", slug);
+    char* json_data = malloc(size + 1);
+    if (json_data == NULL) {
+        fclose(fd);
+        return false;
+    }
 
-    uint8_t value = 0;
-    err = nvs_get_u8(handle, key, &value);
-    nvs_close(handle);
+    size_t read = fread(json_data, 1, size, fd);
+    json_data[read] = '\0';
+    fclose(fd);
 
-    return err == ESP_OK && value != 0;
+    cJSON* root = cJSON_Parse(json_data);
+    free(json_data);
+    if (root == NULL) return false;
+
+    cJSON* autostart = cJSON_GetObjectItem(root, "autostart");
+    bool result = autostart && cJSON_IsBool(autostart) && cJSON_IsTrue(autostart);
+    cJSON_Delete(root);
+
+    return result;
+}
+
+bool plugin_manager_get_autostart(const char* slug) {
+    if (slug == NULL) return false;
+
+    // First check NVS for user override
+    nvs_handle_t handle;
+    esp_err_t err = nvs_open(PLUGIN_NVS_NAMESPACE, NVS_READONLY, &handle);
+    if (err == ESP_OK) {
+        char key[16];
+        make_autostart_key(slug, key, sizeof(key));
+
+        uint8_t value = 0;
+        err = nvs_get_u8(handle, key, &value);
+        nvs_close(handle);
+
+        if (err == ESP_OK) {
+            // User has explicitly set autostart
+            return value != 0;
+        }
+    }
+
+    // No user override - check plugin.json default
+    // Need to find the plugin path from slug
+    plugin_discovery_info_t* plugins = NULL;
+    size_t count = plugin_manager_discover(&plugins);
+
+    bool result = false;
+    for (size_t i = 0; i < count; i++) {
+        if (plugins[i].slug && strcmp(plugins[i].slug, slug) == 0) {
+            result = get_autostart_from_json(plugins[i].path);
+            break;
+        }
+    }
+
+    plugin_manager_free_discovery(plugins, count);
+    return result;
 }
 
 bool plugin_manager_has_running_services(void) {
@@ -688,6 +761,65 @@ bool plugin_manager_has_running_services(void) {
         }
     }
     return false;
+}
+
+// Helper to check autostart for a specific plugin (with path already known)
+static bool check_autostart_for_plugin(const char* slug, const char* path) {
+    // First check NVS for user override
+    nvs_handle_t handle;
+    esp_err_t err = nvs_open(PLUGIN_NVS_NAMESPACE, NVS_READONLY, &handle);
+    if (err == ESP_OK) {
+        char key[16];
+        make_autostart_key(slug, key, sizeof(key));
+
+        uint8_t value = 0;
+        err = nvs_get_u8(handle, key, &value);
+        nvs_close(handle);
+
+        if (err == ESP_OK) {
+            // User has explicitly set autostart
+            return value != 0;
+        }
+    }
+
+    // No user override - check plugin.json default
+    return get_autostart_from_json(path);
+}
+
+void plugin_manager_load_autostart(void) {
+    ESP_LOGI(TAG, "Loading autostart plugins...");
+
+    // Discover all available plugins
+    plugin_discovery_info_t* plugins = NULL;
+    size_t plugin_count = plugin_manager_discover(&plugins);
+
+    if (plugins == NULL || plugin_count == 0) {
+        ESP_LOGI(TAG, "No plugins found for autostart");
+        return;
+    }
+
+    // Load plugins with autostart enabled
+    int loaded_count = 0;
+    for (size_t i = 0; i < plugin_count; i++) {
+        // Use optimized check with path already available
+        if (check_autostart_for_plugin(plugins[i].slug, plugins[i].path)) {
+            ESP_LOGI(TAG, "Autostarting plugin: %s", plugins[i].slug);
+
+            plugin_context_t* ctx = plugin_manager_load(plugins[i].path);
+            if (ctx) {
+                // Start service if it's a service plugin
+                if (plugins[i].type == PLUGIN_TYPE_SERVICE) {
+                    plugin_manager_start_service(ctx);
+                }
+                loaded_count++;
+            } else {
+                ESP_LOGW(TAG, "Failed to autostart plugin: %s", plugins[i].slug);
+            }
+        }
+    }
+
+    plugin_manager_free_discovery(plugins, plugin_count);
+    ESP_LOGI(TAG, "Autostart complete: %d plugins loaded", loaded_count);
 }
 
 // ============================================
