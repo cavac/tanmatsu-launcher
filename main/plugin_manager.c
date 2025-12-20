@@ -681,6 +681,15 @@ bool plugin_manager_get_autostart(const char* slug) {
     return err == ESP_OK && value != 0;
 }
 
+bool plugin_manager_has_running_services(void) {
+    for (size_t i = 0; i < loaded_plugin_count; i++) {
+        if (loaded_plugins[i] && loaded_plugins[i]->state == PLUGIN_STATE_RUNNING) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // ============================================
 // Status Widget Integration
 // ============================================

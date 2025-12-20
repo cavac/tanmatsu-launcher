@@ -103,6 +103,15 @@ bool plugin_manager_set_autostart(const char* slug, bool enabled);
 // Check if plugin has autostart enabled
 bool plugin_manager_get_autostart(const char* slug);
 
+// Check if any service plugins are currently running
+bool plugin_manager_has_running_services(void);
+
+// Check if a plugin has requested a display refresh
+bool plugin_api_refresh_requested(void);
+
+// Clear the refresh request flag (call after refreshing)
+void plugin_api_clear_refresh_request(void);
+
 // ============================================
 // Status Widget Integration
 // ============================================

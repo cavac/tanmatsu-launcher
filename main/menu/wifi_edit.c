@@ -17,6 +17,7 @@
 #include "wifi.h"
 #include "wifi_connection.h"
 #include "wifi_settings.h"
+#include "plugin_manager.h"
 // #include "shapes/pax_misc.h"
 
 typedef enum {
@@ -457,6 +458,12 @@ bool menu_wifi_edit(pax_buf_t* buffer, gui_theme_t* theme, uint8_t index, bool n
                     break;
             }
         } else {
+            render(buffer, theme, &menu, position, true, true);
+        }
+
+        // Check if a plugin requested a display refresh
+        if (plugin_api_refresh_requested()) {
+            plugin_api_clear_refresh_request();
             render(buffer, theme, &menu, position, true, true);
         }
     }

@@ -15,6 +15,7 @@
 #include "pax_types.h"
 #include "test_keyboard.h"
 #include "test_keyboard_stuck_keys.h"
+#include "plugin_manager.h"
 
 typedef enum {
     ACTION_NONE,
@@ -256,6 +257,12 @@ void menu_hardware_test(void) {
                     break;
             }
         } else {
+            render(&menu, true, true);
+        }
+
+        // Check if a plugin requested a display refresh
+        if (plugin_api_refresh_requested()) {
+            plugin_api_clear_refresh_request();
             render(&menu, true, true);
         }
     }

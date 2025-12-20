@@ -15,6 +15,7 @@
 #include "pax_fonts.h"
 #include "pax_text.h"
 #include "pax_types.h"
+#include "plugin_manager.h"
 
 static const char* TAG = "Repository client: project";
 
@@ -191,6 +192,12 @@ void menu_repository_client_project(pax_buf_t* buffer, gui_theme_t* theme, cJSON
                     break;
             }
         } else {
+            render(buffer, theme, &menu, true, true, project);
+        }
+
+        // Check if a plugin requested a display refresh
+        if (plugin_api_refresh_requested()) {
+            plugin_api_clear_refresh_request();
             render(buffer, theme, &menu, true, true, project);
         }
     }

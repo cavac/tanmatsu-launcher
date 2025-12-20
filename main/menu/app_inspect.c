@@ -13,6 +13,7 @@
 #include "pax_matrix.h"
 #include "pax_text.h"
 #include "pax_types.h"
+#include "plugin_manager.h"
 
 #if defined(CONFIG_BSP_TARGET_TANMATSU) || defined(CONFIG_BSP_TARGET_KONSOOL) || \
     defined(CONFIG_BSP_TARGET_HACKERHOTEL_2026)
@@ -144,6 +145,12 @@ bool menu_app_inspect(pax_buf_t* buffer, gui_theme_t* theme, app_t* app) {
             }
         } else {
             render(buffer, theme, position, false, false, app);
+        }
+
+        // Check if a plugin requested a display refresh
+        if (plugin_api_refresh_requested()) {
+            plugin_api_clear_refresh_request();
+            render(buffer, theme, position, true, true, app);
         }
     }
 }

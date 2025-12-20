@@ -15,6 +15,7 @@
 #include "wifi_edit.h"
 #include "wifi_scan.h"
 #include "wifi_settings.h"
+#include "plugin_manager.h"
 
 extern bool wifi_stack_get_initialized(void);
 
@@ -221,6 +222,12 @@ static bool _menu_wifi(pax_buf_t* buffer, gui_theme_t* theme) {
             uint8_t index  = (uint32_t)menu_get_callback_args(&menu, menu_get_position(&menu));
             connected      = update_connected(index);
             render(buffer, theme, &menu, position, (prev_connected != connected), true, false, connected);
+        }
+
+        // Check if a plugin requested a display refresh
+        if (plugin_api_refresh_requested()) {
+            plugin_api_clear_refresh_request();
+            render(buffer, theme, &menu, position, true, true, false, connected);
         }
     }
 }

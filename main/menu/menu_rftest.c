@@ -12,6 +12,7 @@
 #include "pax_matrix.h"
 #include "pax_types.h"
 #include "radio_update.h"
+#include "plugin_manager.h"
 
 typedef enum {
     ACTION_NONE,
@@ -123,6 +124,12 @@ void menu_rftest(void) {
                     break;
             }
         } else {
+            render(&menu, true, true);
+        }
+
+        // Check if a plugin requested a display refresh
+        if (plugin_api_refresh_requested()) {
+            plugin_api_clear_refresh_request();
             render(&menu, true, true);
         }
     }

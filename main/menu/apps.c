@@ -25,6 +25,7 @@
 #include "pax_types.h"
 #include "sdkconfig.h"
 #include "usb_device.h"
+#include "plugin_manager.h"
 
 #define MAX_NUM_APPS 128
 
@@ -394,6 +395,12 @@ void menu_apps(pax_buf_t* buffer, gui_theme_t* theme) {
                         break;
                 }
             } else {
+                render(buffer, theme, &menu, position, true, true);
+            }
+
+            // Check if a plugin requested a display refresh
+            if (plugin_api_refresh_requested()) {
+                plugin_api_clear_refresh_request();
                 render(buffer, theme, &menu, position, true, true);
             }
         }

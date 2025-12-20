@@ -108,7 +108,10 @@ void menu_plugins(pax_buf_t* buffer, gui_theme_t* theme) {
 
         while (!refresh && !exit) {
             bsp_input_event_t event;
-            if (xQueueReceive(input_event_queue, &event, pdMS_TO_TICKS(1000)) == pdTRUE) {
+            // Use shorter timeout when services are running for status bar updates
+            TickType_t timeout = plugin_manager_has_running_services() ?
+                                  pdMS_TO_TICKS(200) : pdMS_TO_TICKS(1000);
+            if (xQueueReceive(input_event_queue, &event, timeout) == pdTRUE) {
                 if (event.type == INPUT_EVENT_TYPE_NAVIGATION && event.args_navigation.state) {
                     switch (event.args_navigation.key) {
                         case BSP_INPUT_NAVIGATION_KEY_ESC:
@@ -189,6 +192,19 @@ void menu_plugins(pax_buf_t* buffer, gui_theme_t* theme) {
                             break;
                     }
                 }
+            }
+
+            // Check if a plugin requested a display refresh
+            if (plugin_api_refresh_requested()) {
+                plugin_api_clear_refresh_request();
+                render_base_screen_statusbar(buffer, theme, true, true, false,
+                    ((gui_element_icontext_t[]){{get_icon(ICON_EXTENSION), "Plugins"}}), 1,
+                    NULL, 0, NULL, 0);
+                if (plugin_count > 0) {
+                    menu_render(buffer, &menu, position, theme, false);
+                }
+                render_footer(buffer, theme, plugin_count > 0);
+                display_blit_buffer(buffer);
             }
         }
 

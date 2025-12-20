@@ -17,6 +17,7 @@
 #include "pax_types.h"
 #include "repository_client.h"
 #include "wifi_connection.h"
+#include "plugin_manager.h"
 
 #if defined(CONFIG_BSP_TARGET_TANMATSU) || defined(CONFIG_BSP_TARGET_KONSOOL) || \
     defined(CONFIG_BSP_TARGET_HACKERHOTEL_2026)
@@ -194,6 +195,12 @@ void menu_repository_client(pax_buf_t* buffer, gui_theme_t* theme) {
                     break;
             }
         } else {
+            render(buffer, theme, &menu, server, true, true);
+        }
+
+        // Check if a plugin requested a display refresh
+        if (plugin_api_refresh_requested()) {
+            plugin_api_clear_refresh_request();
             render(buffer, theme, &menu, server, true, true);
         }
     }

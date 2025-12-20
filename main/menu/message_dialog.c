@@ -20,6 +20,7 @@
 #include "sdkconfig.h"
 #include "usb_device.h"
 #include "wifi_connection.h"
+#include "plugin_manager.h"
 #if defined(CONFIG_BSP_TARGET_TANMATSU) || defined(CONFIG_BSP_TARGET_KONSOOL) || \
     defined(CONFIG_BSP_TARGET_HACKERHOTEL_2026)
 #include "bsp/tanmatsu.h"
@@ -198,6 +199,16 @@ void render_base_screen_statusbar(pax_buf_t* buffer, gui_theme_t* theme, bool ba
     render_base_screen(buffer, theme, background, header || footer, footer, header_left, header_left_count,
                        header_right, header_right_count, footer_left, footer_left_count, footer_right,
                        footer_right_count);
+
+    // Render plugin status widgets in the header area
+    if (header) {
+        // Position plugin widgets after the title (approximately 180px from left)
+        // and centered vertically in header
+        int widget_start_x = 180;
+        int widget_start_y = theme->header.vertical_margin;
+        plugin_icontext_t plugin_widgets[8];
+        plugin_manager_get_status_widgets(plugin_widgets, 8, widget_start_x, widget_start_y);
+    }
 }
 
 static void render(pax_buf_t* buffer, gui_theme_t* theme, pax_vec2_t position, pax_buf_t* icon, const char* title,

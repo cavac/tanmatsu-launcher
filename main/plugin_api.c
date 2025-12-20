@@ -43,6 +43,9 @@ static status_widget_entry_t status_widgets[MAX_STATUS_WIDGETS] = {0};
 static int status_widget_draw_x = 0;  // Updated during render
 static int status_widget_draw_y = 0;
 
+// Display refresh control
+static volatile bool display_refresh_requested = false;
+
 // ============================================
 // Logging API Implementation
 // ============================================
@@ -77,7 +80,19 @@ pax_buf_t* plugin_display_get_buffer(void) {
 }
 
 void plugin_display_flush(void) {
-    display_blit_buffer(display_get_buffer());
+    // Just set the flag - menus will pick it up on their next timeout-based refresh
+    // This leverages the existing periodic refresh that updates WiFi/battery indicators
+    display_refresh_requested = true;
+}
+
+// Check if a plugin has requested a display refresh
+bool plugin_api_refresh_requested(void) {
+    return display_refresh_requested;
+}
+
+// Clear the refresh request flag (call after refreshing)
+void plugin_api_clear_refresh_request(void) {
+    display_refresh_requested = false;
 }
 
 void plugin_display_flush_region(int x, int y, int w, int h) {
