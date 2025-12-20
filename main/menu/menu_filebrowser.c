@@ -12,7 +12,6 @@
 #include "pax_gfx.h"
 #include "pax_matrix.h"
 #include "pax_types.h"
-#include "plugin_manager.h"
 
 static void render(menu_t* menu, pax_vec2_t position, bool partial, bool icons, const char* title) {
     pax_buf_t*   buffer = display_get_buffer();
@@ -154,12 +153,6 @@ bool menu_filebrowser(const char* in_path, const char* filter[], size_t filter_l
                         break;
                 }
             } else {
-                render(&menu, position, true, true, title);
-            }
-
-            // Check if a plugin requested a display refresh
-            if (plugin_api_refresh_requested()) {
-                plugin_api_clear_refresh_request();
                 render(&menu, position, true, true, title);
             }
         }

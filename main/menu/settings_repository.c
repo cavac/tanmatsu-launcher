@@ -11,7 +11,6 @@
 #include "message_dialog.h"
 #include "pax_gfx.h"
 #include "pax_types.h"
-#include "plugin_manager.h"
 
 #define REPO_SERVER_MAX_LEN     128
 #define REPO_BASE_URI_MAX_LEN   64
@@ -187,12 +186,6 @@ void menu_settings_repository(pax_buf_t* buffer, gui_theme_t* theme) {
                     break;
             }
         } else {
-            render(buffer, theme, &menu, position, true, true);
-        }
-
-        // Check if a plugin requested a display refresh
-        if (plugin_api_refresh_requested()) {
-            plugin_api_clear_refresh_request();
             render(buffer, theme, &menu, position, true, true);
         }
     }

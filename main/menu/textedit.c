@@ -8,7 +8,6 @@
 #include "message_dialog.h"
 #include "pax_gfx.h"
 #include "pax_types.h"
-#include "plugin_manager.h"
 
 #if defined(CONFIG_BSP_TARGET_TANMATSU) || defined(CONFIG_BSP_TARGET_KONSOOL) || \
     defined(CONFIG_BSP_TARGET_HACKERHOTEL_2026)
@@ -107,13 +106,6 @@ void menu_textedit(pax_buf_t* buffer, gui_theme_t* theme, const char* title, cha
                 render(buffer, theme, true, true, title);
             }
 
-            // Check if a plugin requested a display refresh
-            if (plugin_api_refresh_requested()) {
-                plugin_api_clear_refresh_request();
-                force_flush = true;
-                render(buffer, theme, true, true, title);
-            }
-
             bool flush = false;
             gui_osk_edit_loop(&kb_ctx, buffer, &flush);
             if (flush || force_flush) {
@@ -180,14 +172,6 @@ void menu_textedit(pax_buf_t* buffer, gui_theme_t* theme, const char* title, cha
                     display_blit_buffer(buffer);
                 }
             } else {
-                render(buffer, theme, true, true, title);
-                gui_edit_render(buffer, &context);
-                display_blit_buffer(buffer);
-            }
-
-            // Check if a plugin requested a display refresh
-            if (plugin_api_refresh_requested()) {
-                plugin_api_clear_refresh_request();
                 render(buffer, theme, true, true, title);
                 gui_edit_render(buffer, &context);
                 display_blit_buffer(buffer);

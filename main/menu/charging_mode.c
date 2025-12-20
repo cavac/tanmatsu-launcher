@@ -14,7 +14,6 @@
 #include "pax_matrix.h"
 #include "pax_text.h"
 #include "pax_types.h"
-#include "plugin_manager.h"
 
 // #include "shapes/pax_misc.h"
 
@@ -91,12 +90,6 @@ void charging_mode(pax_buf_t* buffer, gui_theme_t* theme) {
             /*if (information.battery_available && !information.battery_charging && information.power_supply_available
             && information.remaining_percentage > 95.0) { bsp_power_off(false);
             }*/
-        }
-
-        // Check if a plugin requested a display refresh
-        if (plugin_api_refresh_requested()) {
-            plugin_api_clear_refresh_request();
-            render(buffer, theme, &information);
         }
     }
 }

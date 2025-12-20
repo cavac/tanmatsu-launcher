@@ -17,7 +17,6 @@
 #include "wifi_connection.h"
 #include "wifi_edit.h"
 #include "wifi_settings.h"
-#include "plugin_manager.h"
 // #include "shapes/pax_misc.h"
 
 static const char* TAG = "WiFi scan";
@@ -270,12 +269,6 @@ void menu_wifi_scan(pax_buf_t* buffer, gui_theme_t* theme) {
                     break;
             }
         } else {
-            render(buffer, theme, &menu, position, true, true, false);
-        }
-
-        // Check if a plugin requested a display refresh
-        if (plugin_api_refresh_requested()) {
-            plugin_api_clear_refresh_request();
             render(buffer, theme, &menu, position, true, true, false);
         }
     }

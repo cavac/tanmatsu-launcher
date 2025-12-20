@@ -15,7 +15,6 @@
 #include "pax_matrix.h"
 #include "pax_text.h"
 #include "pax_types.h"
-#include "plugin_manager.h"
 
 static const char* TAG = "nametag";
 
@@ -127,12 +126,6 @@ void menu_nametag(pax_buf_t* buffer, gui_theme_t* theme) {
                 default:
                     break;
             }
-        }
-
-        // Check if a plugin requested a display refresh
-        if (plugin_api_refresh_requested()) {
-            plugin_api_clear_refresh_request();
-            render_nametag(buffer);
         }
     }
 }

@@ -216,19 +216,6 @@ void menu_plugins(pax_buf_t* buffer, gui_theme_t* theme) {
                     }
                 }
             }
-
-            // Check if a plugin requested a display refresh
-            if (plugin_api_refresh_requested()) {
-                plugin_api_clear_refresh_request();
-                render_base_screen_statusbar(buffer, theme, true, true, false,
-                    ((gui_element_icontext_t[]){{get_icon(ICON_EXTENSION), "Plugins"}}), 1,
-                    NULL, 0, NULL, 0);
-                if (plugin_count > 0) {
-                    menu_render(buffer, &menu, position, theme, false);
-                }
-                render_footer(buffer, theme, plugin_count > 0);
-                display_blit_buffer(buffer);
-            }
         }
 
         menu_free(&menu);

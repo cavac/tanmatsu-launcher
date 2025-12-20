@@ -24,7 +24,6 @@
 #include "menu_repository_client.h"
 #include "menu_settings.h"
 #include "menu/menu_plugins.h"
-#include "plugin_manager.h"
 #include "pax_gfx.h"
 #include "pax_matrix.h"
 #include "pax_types.h"
@@ -256,12 +255,6 @@ void menu_home(void) {
                     break;
             }
         } else {
-            render(buffer, theme, &menu, position, true, true);
-        }
-
-        // Check if a plugin requested a display refresh
-        if (plugin_api_refresh_requested()) {
-            plugin_api_clear_refresh_request();
             render(buffer, theme, &menu, position, true, true);
         }
     }

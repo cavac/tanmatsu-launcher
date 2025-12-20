@@ -19,7 +19,6 @@
 #include "sdkconfig.h"
 #include "settings_clock_timezone.h"
 #include "timezone.h"
-#include "plugin_manager.h"
 
 static const char* TAG = "clock";
 
@@ -247,12 +246,6 @@ void menu_settings_clock(pax_buf_t* buffer, gui_theme_t* theme) {
                     break;
             }
         } else {
-            render(buffer, theme, position, zone, ntp, true, true, selection);
-        }
-
-        // Check if a plugin requested a display refresh
-        if (plugin_api_refresh_requested()) {
-            plugin_api_clear_refresh_request();
             render(buffer, theme, position, zone, ntp, true, true, selection);
         }
     }
