@@ -21,6 +21,7 @@
 #include "freertos/task.h"
 #include "pax_gfx.h"
 #include "pax_fonts.h"
+#include "chakrapetchmedium.h"
 
 #include "common/display.h"
 #include "bsp/input.h"
@@ -159,7 +160,7 @@ void plugin_draw_line(pax_buf_t* buffer, int x0, int y0, int x1, int y1, uint32_
 
 int plugin_draw_text(pax_buf_t* buffer, int x, int y, int font_size, uint32_t color, const char* text) {
     if (!buffer || !text) return 0;
-    pax_vec2f dims = pax_draw_text(buffer, (pax_col_t)color, pax_font_sky_mono, (float)font_size, (float)x, (float)y, text);
+    pax_vec2f dims = pax_draw_text(buffer, (pax_col_t)color, &chakrapetchmedium, (float)font_size, (float)x, (float)y, text);
     return (int)dims.x;
 }
 
