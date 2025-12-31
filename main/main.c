@@ -113,7 +113,6 @@ static void wifi_task(void* pvParameters) {
     if (wifi_remote_initialize() == ESP_OK) {
         wifi_connection_init_stack();
         wifi_stack_initialized = true;
-        // wifi_connect_try_all();
     } else {
         // bsp_power_set_radio_state(BSP_POWER_RADIO_STATE_OFF);
         ESP_LOGE(TAG, "WiFi radio not responding, did you flash ESP-HOSTED firmware?");
@@ -364,8 +363,7 @@ void app_main(void) {
 #endif
 #endif
 
-    // TEMPORARILY DISABLED FOR AUDIO DEBUGGING - WiFi SDIO conflicts with I2S audio
-    // xTaskCreatePinnedToCore(wifi_task, TAG, 4096, NULL, 10, NULL, CONFIG_SOC_CPU_CORES_NUM - 1);
+    xTaskCreatePinnedToCore(wifi_task, TAG, 4096, NULL, 10, NULL, CONFIG_SOC_CPU_CORES_NUM - 1);
 
     badgelink_init();
     usb_initialize();
