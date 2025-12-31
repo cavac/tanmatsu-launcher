@@ -11,6 +11,11 @@
 #include "bsp/led.h"
 #include "bsp/power.h"
 #include "bsp/rtc.h"
+
+// Audio test beep headers
+#include "bsp/audio.h"
+#include "driver/i2s_std.h"
+
 #include "chakrapetchmedium.h"
 #include "common/display.h"
 #include "common/theme.h"
@@ -247,6 +252,8 @@ void app_main(void) {
         ESP_ERROR_CHECK(bsp_input_get_queue(&input_event_queue));
         bsp_display_set_backlight_brightness(100);
         display_init();
+
+        // Audio is already initialized by bsp_device_initialize()
     } else if (bsp_device_get_initialized_without_coprocessor()) {
         display_init();
         pax_buf_t* buffer = display_get_buffer();
@@ -357,7 +364,8 @@ void app_main(void) {
 #endif
 #endif
 
-    xTaskCreatePinnedToCore(wifi_task, TAG, 4096, NULL, 10, NULL, CONFIG_SOC_CPU_CORES_NUM - 1);
+    // TEMPORARILY DISABLED FOR AUDIO DEBUGGING - WiFi SDIO conflicts with I2S audio
+    // xTaskCreatePinnedToCore(wifi_task, TAG, 4096, NULL, 10, NULL, CONFIG_SOC_CPU_CORES_NUM - 1);
 
     badgelink_init();
     usb_initialize();
