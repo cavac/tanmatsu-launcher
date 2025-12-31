@@ -77,7 +77,13 @@ idf_component_register(
 		"device_settings.c"
 		"fastopen.c"
 
+		# Plugin system
+		"plugin_api.c"
+		"plugin_manager.c"
+		"menu/menu_plugins.c"
+
 	PRIV_REQUIRES
+		plugin-api
 		esp_lcd
 		fatfs
 		nvs_flash

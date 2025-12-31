@@ -18,4 +18,7 @@ sdkconfig
 sdkconfig_*
 REPOLAYOUT.md
 CLAUDE.md
-components/badgeteam__badgelink/
+components/badgeteam__badge-bsp
+components/badgeteam__badge-elf
+components/badgeteam__badge-elf-api
+components/badgeteam__badgelink
