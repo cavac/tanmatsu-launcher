@@ -45,6 +45,7 @@
 #include "usb_device.h"
 #include "wifi_connection.h"
 #include "wifi_remote.h"
+#include "plugin_manager.h"
 
 #if defined(CONFIG_BSP_TARGET_TANMATSU) || defined(CONFIG_BSP_TARGET_KONSOOL)
 #include "bsp/tanmatsu.h"
@@ -262,9 +263,9 @@ void app_main(void) {
     startup_screen("Applying settings...");
     device_settings_apply();
 
-    // Configure LEDs
+    // Configure LEDs - use manual mode so plugins can control individual LEDs
     bsp_led_clear();
-    bsp_led_set_mode(true);
+    bsp_led_set_mode(false);
 
     // Initialize filesystems
     startup_screen("Mounting FAT filesystem...");
@@ -363,6 +364,10 @@ void app_main(void) {
     badgelink_start(usb_send_data);
 
     load_icons();
+
+    startup_screen("Initializing plugins...");
+    plugin_manager_init();
+    plugin_manager_load_autostart();
 
     bsp_power_set_usb_host_boost_enabled(true);
 

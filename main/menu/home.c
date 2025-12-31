@@ -12,6 +12,7 @@
 #include "common/theme.h"
 #include "coprocessor_management.h"
 #include "esp_log.h"
+#include "esp_system.h"
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
 #include "gui_element_footer.h"
@@ -23,7 +24,10 @@
 #include "menu/message_dialog.h"
 #include "menu/nametag.h"
 #include "menu_repository_client.h"
+#include "menu/menu_plugins.h"
 #include "pax_gfx.h"
+#include "plugin_manager.h"
+#include "esp_wifi.h"
 #include "pax_matrix.h"
 #include "pax_types.h"
 #include "settings.h"
@@ -38,6 +42,7 @@ typedef enum {
     ACTION_NAMETAG,
     ACTION_REPOSITORY,
     ACTION_SETTINGS,
+    ACTION_PLUGINS,
     ACTION_TOOLS,
     ACTION_INFORMATION,
     ACTION_RFTEST,
@@ -58,6 +63,9 @@ static void execute_action(pax_buf_t* fb, menu_home_action_t action, gui_theme_t
         case ACTION_SETTINGS:
             menu_settings();
             break;
+        case ACTION_PLUGINS:
+            menu_plugins(fb, theme);
+            break;
         case ACTION_TOOLS:
             menu_tools();
             break;
@@ -76,7 +84,7 @@ static void execute_action(pax_buf_t* fb, menu_home_action_t action, gui_theme_t
 }
 
 #if defined(CONFIG_BSP_TARGET_TANMATSU) || defined(CONFIG_BSP_TARGET_KONSOOL)
-#define FOOTER_LEFT  ((gui_element_icontext_t[]){{get_icon(ICON_F5), "Settings"}, {get_icon(ICON_F6), "USB mode"}}), 2
+#define FOOTER_LEFT  ((gui_element_icontext_t[]){{get_icon(ICON_F3), "Reboot"}, {get_icon(ICON_F5), "Settings"}, {get_icon(ICON_F6), "USB mode"}}), 3
 #define FOOTER_RIGHT ((gui_element_icontext_t[]){{NULL, "↑ / ↓ / ← / → | ⏎ Select"}}), 1
 #elif defined(CONFIG_BSP_TARGET_MCH2022) || defined(CONFIG_BSP_TARGET_KAMI) || defined(CONFIG_BSP_TARGET_KAMI)
 #define FOOTER_LEFT  NULL, 0
@@ -142,6 +150,7 @@ void menu_home(void) {
     }
     menu_insert_item_icon(&menu, "Repository", NULL, (void*)ACTION_REPOSITORY, -1, get_icon(ICON_REPOSITORY));
     menu_insert_item_icon(&menu, "Settings", NULL, (void*)ACTION_SETTINGS, -1, get_icon(ICON_SETTINGS));
+    menu_insert_item_icon(&menu, "Plugins", NULL, (void*)ACTION_PLUGINS, -1, get_icon(ICON_EXTENSION));
     menu_insert_item_icon(&menu, "Tools", NULL, (void*)ACTION_TOOLS, -1, get_icon(ICON_EXTENSION));
     menu_insert_item_icon(&menu, "Information", NULL, (void*)ACTION_INFORMATION, -1, get_icon(ICON_INFO));
     if (access("/int/rftest_local.bin", F_OK) == 0) {
@@ -183,6 +192,12 @@ void menu_home(void) {
                             case BSP_INPUT_NAVIGATION_KEY_F3:
                                 if (event.args_navigation.modifiers & BSP_INPUT_MODIFIER_FUNCTION) {
                                     bsp_power_set_radio_state(BSP_POWER_RADIO_STATE_APPLICATION);
+                                } else {
+                                    // Clean shutdown before restart to avoid heap corruption
+                                    plugin_manager_shutdown();
+                                    esp_wifi_stop();
+                                    vTaskDelay(pdMS_TO_TICKS(100));
+                                    esp_restart();
                                 }
                                 break;
                             case BSP_INPUT_NAVIGATION_KEY_F4:
